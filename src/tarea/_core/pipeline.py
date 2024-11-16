@@ -1,20 +1,22 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING
+import inspect
+from typing import Callable, Optional
 
+from .util.sentinel import StopSentinel
 from .stage import Producer, ProducerConsumer
-
-if TYPE_CHECKING:
-    from .task import Task
-
-from .sentinel import StopSentinel
 
 
 class Pipeline:
     """A sequence of at least 1 connected Tasks.
     
-    Returns a callable object with the same signature as the initial task.
+    Two pipelines can be piped into another via:
+    ```python
+    new_pipeline = p1 >> p2
+    # OR
+    new_pipeline = p1.pipe(p2)
+    ```
     """
 
     def __init__(self, task: Task):
@@ -54,3 +56,37 @@ class Pipeline:
     def __rshift__(self, other) -> Pipeline:
         """Allow the syntax `pipeline1 >> pipeline2`."""
         return self.pipe(other)
+
+
+class Task:
+    """The representation of a function used to initialize a Pipeline."""
+    def __init__(
+        self,
+        func: Callable,
+        branch: bool = False,
+        join: bool = False,
+        concurrency: int = 1,
+        throttle: int = 0
+    ):
+        if not isinstance(concurrency, int):
+            raise TypeError("concurrency must be an integer")
+        if concurrency < 1:
+            raise ValueError("concurrency cannot be less than 1")
+        if not isinstance(throttle, int):
+            raise TypeError("throttle must be an integer")
+        if throttle < 0:
+            raise ValueError("throttle cannot be less than 0")
+        
+        is_gen = inspect.isgeneratorfunction(func) or inspect.isasyncgenfunction(func)
+        if branch and not is_gen:
+            raise TypeError("A branching task must exhibit generator behaviour (use the yield keyword)")
+        if not branch and is_gen:
+            raise TypeError("A non-branching task cannot be a generator")
+        
+        self.func = func
+        self.branch = branch
+        self.join = join
+        self.concurrency = concurrency
+        self.throttle = throttle
+
+        self.next: Optional[Task] = None

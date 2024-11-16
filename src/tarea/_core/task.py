@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import functools
 from typing import Callable, Optional, overload
 
-from .pipeline import Pipeline
+from .pipeline import Pipeline, Task
 
 
 @overload
-def task(func: None, /, *, branch: bool = False, join: bool = False, concurrency: int = 1, throttle: int = 0) -> Task:
+def task(func: None, /, *, branch: bool = False, join: bool = False, concurrency: int = 1, throttle: int = 0) -> Callable[..., Pipeline]:
     """Enable type hints for functions decorated with `@task()`."""
 
 
@@ -35,38 +36,5 @@ def task(
     """
     # Classic decorator trick: @task() means func is None, @task without parentheses means func is passed. 
     if func is None:
-        return Task(branch=branch, join=join, concurrency=concurrency, throttle=throttle)
-    task = Task(func=func, branch=branch, join=join, concurrency=concurrency, throttle=throttle)
-    return Pipeline(task)
-
-
-class Task:
-    """The representation of a function within a Pipeline."""
-    def __init__(
-        self,
-        func: Optional[Callable] = None,
-        branch: bool = False,
-        join: bool = False,
-        concurrency: int = 1,
-        throttle: int = 0
-    ):
-        if not isinstance(concurrency, int):
-            raise TypeError("concurrency must be an integer")
-        if concurrency < 1:
-            raise ValueError("concurrency cannot be less than 1")
-        if not isinstance(throttle, int):
-            raise TypeError("throttle must be an integer")
-        if throttle < 0:
-            raise ValueError("throttle cannot be less than 0")
-        
-        self.func = func
-        self.branch = branch
-        self.join = join
-        self.concurrency = concurrency
-        self.throttle = throttle
-
-        self.next: Optional[Task] = None
-    
-    def __call__(self, func: Callable) -> Pipeline:
-        self.func = func
-        return Pipeline(self)
+        return functools.partial(task, branch=branch, join=join, concurrency=concurrency, throttle=throttle)
+    return Pipeline(Task(func=func, branch=branch, join=join, concurrency=concurrency, throttle=throttle))

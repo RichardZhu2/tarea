@@ -3,10 +3,10 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from .task import Task
+from .util.sentinel import StopSentinel
 
-from .sentinel import StopSentinel
+if TYPE_CHECKING:
+    from .pipeline import Task
 
 
 class Producer:
