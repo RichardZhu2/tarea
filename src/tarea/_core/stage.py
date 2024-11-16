@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from .util.sentinel import StopSentinel
 
 if TYPE_CHECKING:
-    from .pipeline import Task
+    from .task import Task
 
 
 class Producer:
