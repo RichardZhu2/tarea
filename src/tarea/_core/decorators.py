@@ -8,7 +8,7 @@ from .task import Task
 
 
 @overload
-def task(func: None, /, *, branch: bool = False, join: bool = False, concurrency: int = 1, throttle: int = 0) -> Callable[..., Pipeline]:
+def task(func: None = None, /, *, branch: bool = False, join: bool = False, concurrency: int = 1, throttle: int = 0) -> Callable[..., Pipeline]:
     """Enable type hints for functions decorated with `@task()`."""
 
 

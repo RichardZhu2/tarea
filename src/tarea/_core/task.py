@@ -22,14 +22,21 @@ class Task:
             raise TypeError("throttle must be an integer")
         if throttle < 0:
             raise ValueError("throttle cannot be less than 0")
+        if not callable(func):
+            raise TypeError("A task must be a callable object")
         
-        is_gen = inspect.isgeneratorfunction(func) \
+        self.is_gen = inspect.isgeneratorfunction(func) \
             or inspect.isasyncgenfunction(func) \
             or inspect.isgeneratorfunction(func.__call__) \
             or inspect.isasyncgenfunction(func.__call__)
-        if branch and not is_gen:
+        self.is_async = inspect.iscoroutinefunction(func) \
+            or inspect.isasyncgenfunction(func) \
+            or inspect.iscoroutinefunction(func.__call__) \
+            or inspect.isasyncgenfunction(func.__call__)
+
+        if branch and not self.is_gen:
             raise TypeError("A branching task must exhibit generator behaviour (use the yield keyword)")
-        if not branch and is_gen:
+        if not branch and self.is_gen:
             raise TypeError("A non-branching task cannot be a generator")
         
         self.func = func
