@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING
+import inspect
+from typing import Callable, TYPE_CHECKING
 
 from .util.sentinel import StopSentinel
 from .stage import Producer, ProducerConsumer
@@ -55,6 +56,19 @@ class Pipeline:
         self.tasks.extend(other.tasks)
         return self
 
-    def __rshift__(self, other) -> Pipeline:
+    def __rshift__(self, other: Pipeline) -> Pipeline:
         """Allow the syntax `pipeline1 >> pipeline2`."""
         return self.pipe(other)
+    
+    def close(self, other: Callable) -> Callable:
+        """Connect the pipeline to a sink function (a callable that takes the pipeline output as input)."""
+        async def sink(*args, **kwargs):
+            await other(self(*args, **kwargs))
+        return sink
+
+    def __and__(self, other: Callable) -> Callable:
+        """Allow the syntax `pipeline & sink`."""
+        if callable(other) and \
+            (inspect.iscoroutinefunction(other) or inspect.iscoroutinefunction(other.__call__)):
+            return self.close(other)
+        raise TypeError(f"{other} must be an async callable that takes a generator and returns a value")
