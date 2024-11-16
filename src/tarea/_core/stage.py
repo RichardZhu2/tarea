@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .task import Task
 
+from .sentinel import StopSentinel
+
 
 class Producer:
     def __init__(self, task: Task, tg: asyncio.TaskGroup):
@@ -24,7 +26,7 @@ class Producer:
         await self._enqueue(*args, **kwargs)
 
         for _ in range(self._n_consumers):
-            await self.q_out.put(None)
+            await self.q_out.put(StopSentinel)
 
     def start(self, *args, **kwargs):
         self.tg.create_task(self._job(*args, **kwargs))
@@ -49,7 +51,7 @@ class ProducerConsumer:
         self._workers_done += 1
         if self._workers_done == self.task.concurrency:
             for _ in range(self._n_consumers):
-                await self.q_out.put(None)
+                await self.q_out.put(StopSentinel)
 
     def start(self):
         for _ in range(self.task.concurrency):
@@ -71,7 +73,7 @@ class Dequeue:
          self.task = task
 
     async def _input_stream(self):
-        while (data := await self.q_in.get()) is not None:
+        while (data := await self.q_in.get()) is not StopSentinel:
             yield data
     
     def __call__(self):

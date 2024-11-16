@@ -8,6 +8,8 @@ from .stage import Producer, ProducerConsumer
 if TYPE_CHECKING:
     from .task import Task
 
+from .sentinel import StopSentinel
+
 
 class Pipeline:
     """A sequence of at least 1 connected Tasks.
@@ -18,7 +20,7 @@ class Pipeline:
     def __init__(self, task: Task):
         self.tasks = [task]
     
-    def _output(self, tg, *args, **kwargs) -> asyncio.Queue:
+    def _get_q_out(self, tg: asyncio.TaskGroup, *args, **kwargs) -> asyncio.Queue:
         """Feed forward each stage to the next, returning the output queue of the final stage."""
         stage = Producer(task=self.tasks[0], tg=tg)
         stage.start(*args, **kwargs)
@@ -33,17 +35,16 @@ class Pipeline:
 
     async def __call__(self, *args, **kwargs):
         """Call the pipeline, taking the inputs to the first task, and returning the output from the last task."""
-        #! How to handle difference between join and branch type consumers
         try:
             async with asyncio.TaskGroup() as tg:
-                output = self._output(tg, *args, **kwargs)
-                while (data := await output.get()) is not None:
+                output = self._get_q_out(tg, *args, **kwargs)
+                while (data := await output.get()) is not StopSentinel:
                     yield data
         except ExceptionGroup as eg:
             raise eg.exceptions[0]
     
     def pipe(self, other) -> Pipeline:
-        """Connect two pipelines."""
+        """Connect two pipelines, returning a new Pipeline."""
         if not isinstance(other, Pipeline):
             raise TypeError(f"{other} cannot be piped into a Pipeline")
         self.tasks[-1].next = other.tasks[0]
@@ -51,5 +52,5 @@ class Pipeline:
         return self
 
     def __rshift__(self, other) -> Pipeline:
-        """Allow the syntax pipeline1 >> pipeline2."""
+        """Allow the syntax `pipeline1 >> pipeline2`."""
         return self.pipe(other)
