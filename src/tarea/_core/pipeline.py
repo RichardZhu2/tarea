@@ -57,7 +57,7 @@ class Pipeline:
 
     def __and__(self, other: Callable) -> Callable:
         """Allow the syntax `pipeline & consumer`."""
-        return self.close(other)
+        return self.consume(other)
     
     def __repr__(self):
         return f"{self.__class__.__name__} {[task.func for task in self.tasks]}"
