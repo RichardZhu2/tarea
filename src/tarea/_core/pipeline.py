@@ -47,16 +47,16 @@ class Pipeline:
         """Allow the syntax `pipeline1 >> pipeline2`."""
         return self.pipe(other)
     
-    def close(self, other: Callable) -> Callable:
-        """Connect the pipeline to a sink function (a callable that takes the pipeline output as input)."""
+    def consume(self, other: Callable) -> Callable:
+        """Connect the pipeline to a consumer function (a callable that takes the pipeline output as input)."""
         if callable(other):
-            def sink(*args, **kwargs):
+            def consumer(*args, **kwargs):
                 return other(self(*args, **kwargs))
-            return sink
-        raise TypeError(f"{other} must be a callable that takes a generator and returns a value")
+            return consumer
+        raise TypeError(f"{other} must be a callable that takes a generator")
 
     def __and__(self, other: Callable) -> Callable:
-        """Allow the syntax `pipeline & sink`."""
+        """Allow the syntax `pipeline & consumer`."""
         return self.close(other)
     
     def __repr__(self):
@@ -69,11 +69,11 @@ class AsyncPipeline(Pipeline):
         output = AsyncPipelineOutput(self)
         return output(*args, **kwargs)
         
-    def close(self, other: Callable) -> Callable:
-        """Connect the pipeline to a sink function (a callable that takes the pipeline output as input)."""
+    def consume(self, other: Callable) -> Callable:
+        """Connect the pipeline to a consumer function (a callable that takes the pipeline output as input)."""
         if callable(other) and \
             (inspect.iscoroutinefunction(other) or inspect.iscoroutinefunction(other.__call__)):
-            async def sink(*args, **kwargs):
+            async def consumer(*args, **kwargs):
                 return await other(self(*args, **kwargs))
-            return sink
-        raise TypeError(f"{other} must be a callable that takes a generator and returns a value")
+            return consumer
+        raise TypeError(f"{other} must be an async callable that takes an async generator")
