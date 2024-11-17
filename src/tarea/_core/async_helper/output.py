@@ -16,15 +16,17 @@ class AsyncPipelineOutput:
 
     def _get_q_out(self, tg: asyncio.TaskGroup, *args, **kwargs) -> asyncio.Queue:
         """Feed forward each stage to the next, returning the output queue of the final stage."""
-        stage = AsyncProducer(task=self.pipeline.tasks[0], tg=tg)
-        stage.start(*args, **kwargs)
-        q_out = stage.q_out
-
-        for task in self.pipeline.tasks[1:]:
-            stage = AsyncProducerConsumer(q_in=q_out, task=task, tg=tg)
-            stage.start()
+        q_out = None
+        for task, next_task in zip(self.pipeline.tasks, self.pipeline.tasks[1:] + [None]):
+            n_consumers = 1 if next_task is None else next_task.concurrency
+            if q_out is None:
+                stage = AsyncProducer(task=self.pipeline.tasks[0], tg=tg, n_consumers=n_consumers)
+                stage.start(*args, **kwargs)
+            else:
+                stage = AsyncProducerConsumer(q_in=q_out, task=task, tg=tg, n_consumers=n_consumers)
+                stage.start()
             q_out = stage.q_out
-        
+
         return q_out
     
     async def __call__(self, *args, **kwargs):

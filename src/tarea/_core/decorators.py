@@ -38,4 +38,4 @@ def task(
     # Classic decorator trick: @task() means func is None, @task without parentheses means func is passed. 
     if func is None:
         return functools.partial(task, branch=branch, join=join, concurrency=concurrency, throttle=throttle)
-    return Pipeline(Task(func=func, branch=branch, join=join, concurrency=concurrency, throttle=throttle))
+    return Pipeline([Task(func=func, branch=branch, join=join, concurrency=concurrency, throttle=throttle)])

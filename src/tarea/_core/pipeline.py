@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import inspect
-from typing import Callable, TYPE_CHECKING
+from typing import Callable, List, TYPE_CHECKING
 
 from .async_helper.output import AsyncPipelineOutput
 from .sync_helper.output import PipelineOutput
@@ -21,16 +21,16 @@ class Pipeline:
     ```
     """
 
-    def __new__(cls, task: Task):
-        if task.is_async:
+    def __new__(cls, tasks: List[Task]):
+        if any(task.is_async for task in tasks):
             instance = object.__new__(AsyncPipeline)
         else:
             instance = object.__new__(cls)
-        instance.__init__(task=task)
+        instance.__init__(tasks=tasks)
         return instance
 
-    def __init__(self, task: Task):
-        self.tasks = [task]
+    def __init__(self, tasks: List[Task]):
+        self.tasks = tasks
 
     def __call__(self, *args, **kwargs):
         """Return the pipeline output."""
@@ -40,15 +40,8 @@ class Pipeline:
     def pipe(self, other) -> Pipeline:
         """Connect two pipelines, returning a new Pipeline."""
         if not isinstance(other, Pipeline):
-            raise TypeError(f"{other} cannot be piped into a Pipeline")
-        
-        self.tasks[-1].next = other.tasks[0]
-        if not isinstance(self, AsyncPipeline) and isinstance(other, AsyncPipeline):
-            # piping an `AsyncPipeline` into a `Pipeline` returns an `AsyncPipeline`
-            other.tasks = self.tasks + other.tasks
-            return other
-        self.tasks.extend(other.tasks)
-        return self
+            raise TypeError(f"{other} of type {type(other)} cannot be piped into a Pipeline")
+        return Pipeline(self.tasks + other.tasks)
 
     def __rshift__(self, other: Pipeline) -> Pipeline:
         """Allow the syntax `pipeline1 >> pipeline2`."""
@@ -65,6 +58,9 @@ class Pipeline:
     def __and__(self, other: Callable) -> Callable:
         """Allow the syntax `pipeline & sink`."""
         return self.close(other)
+    
+    def __repr__(self):
+        return f"{self.__class__.__name__} {[task.func for task in self.tasks]}"
 
 
 class AsyncPipeline(Pipeline):

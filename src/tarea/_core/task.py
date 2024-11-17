@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import inspect
-from typing import Callable, Optional
+from typing import Callable
 
 
 class Task:
-    """The representation of a function used to initialize a Pipeline."""
+    """The representation of a function within a Pipeline."""
     def __init__(
         self,
         func: Callable,
@@ -44,5 +44,3 @@ class Task:
         self.join = join
         self.concurrency = concurrency
         self.throttle = throttle
-
-        self.next: Optional[Task] = None
