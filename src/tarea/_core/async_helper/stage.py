@@ -4,6 +4,7 @@ import asyncio
 from typing import TYPE_CHECKING
 
 from .queue_io import AsyncDequeue, AsyncEnqueue
+from ..util.asynchronize import ascynchronize
 from ..util.sentinel import StopSentinel
 
 if TYPE_CHECKING:
@@ -12,7 +13,7 @@ if TYPE_CHECKING:
 
 class AsyncProducer:
     def __init__(self, task: Task, tg: asyncio.TaskGroup, n_consumers: int):
-        self.task = task
+        self.task = ascynchronize(task)
         if task.concurrency > 1:
             raise RuntimeError(f"The first task in a pipeline ({task.func.__qualname__}) cannot have concurrency greater than 1")
         if task.join:
@@ -36,7 +37,7 @@ class AsyncProducer:
 class AsyncProducerConsumer:
     def __init__(self, q_in: asyncio.Queue, task: Task, tg: asyncio.TaskGroup, n_consumers: int):
         self.q_in = q_in
-        self.task = task
+        self.task = ascynchronize(task)
         self.tg = tg
         self.n_consumers = n_consumers
         self.q_out = asyncio.Queue(maxsize=task.throttle)
