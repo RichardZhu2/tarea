@@ -12,7 +12,8 @@ class Task:
         branch: bool = False,
         join: bool = False,
         concurrency: int = 1,
-        throttle: int = 0
+        throttle: int = 0,
+        daemon: bool = False
     ):
         if not isinstance(concurrency, int):
             raise TypeError("concurrency must be an integer")
@@ -39,8 +40,12 @@ class Task:
         if not branch and self.is_gen:
             raise TypeError("A non-branching task cannot be a generator")
         
+        if self.is_async and daemon:
+            raise ValueError("daemon cannot be True for an async task")
+        
         self.func = func
         self.branch = branch
         self.join = join
         self.concurrency = concurrency
         self.throttle = throttle
+        self.daemon = daemon

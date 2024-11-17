@@ -8,12 +8,12 @@ from .task import Task
 
 
 @overload
-def task(func: None = None, /, *, branch: bool = False, join: bool = False, concurrency: int = 1, throttle: int = 0) -> Callable[..., Pipeline]:
+def task(func: None = None, /, *, branch: bool = False, join: bool = False, concurrency: int = 1, throttle: int = 0, daemon: bool = False) -> Callable[..., Pipeline]:
     """Enable type hints for functions decorated with `@task()`."""
 
 
 @overload
-def task(func: Callable, /, *, branch: bool = False, join: bool = False, concurrency: int = 1, throttle: int = 0) -> Pipeline:
+def task(func: Callable, /, *, branch: bool = False, join: bool = False, concurrency: int = 1, throttle: int = 0, daemon: bool = False) -> Pipeline:
     """Enable type hints for functions decorated with `@task`."""
 
 
@@ -24,7 +24,8 @@ def task(
     branch: bool = False,
     join: bool = False,
     concurrency: int = 1,
-    throttle: int = 0
+    throttle: int = 0,
+    daemon: bool = False
 ):
     """Transform a function into a `Task` object, then initialize a `Pipeline` object with this task.
     A Pipeline initialized in this way consists of one Task, and can be piped into other Pipelines.
@@ -37,5 +38,5 @@ def task(
     """
     # Classic decorator trick: @task() means func is None, @task without parentheses means func is passed. 
     if func is None:
-        return functools.partial(task, branch=branch, join=join, concurrency=concurrency, throttle=throttle)
-    return Pipeline([Task(func=func, branch=branch, join=join, concurrency=concurrency, throttle=throttle)])
+        return functools.partial(task, branch=branch, join=join, concurrency=concurrency, throttle=throttle, daemon=daemon)
+    return Pipeline([Task(func=func, branch=branch, join=join, concurrency=concurrency, throttle=throttle, daemon=daemon)])
