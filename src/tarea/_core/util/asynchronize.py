@@ -1,15 +1,17 @@
 from __future__ import annotations
 
 import asyncio
+from concurrent.futures import Future
 import functools
 
+from .thread_pool import ThreadPool
 from ..task import Task
 
 
-def ascynchronize(task: Task) -> Task:
+def ascynchronize(task: Task, tp: ThreadPool) -> Task:
     """Unifies async and sync functions within an `AsyncPipeline`.
 
-    Synchronous functions are transformed into asynchronous functions via `loop.run_in_executor`.
+    Synchronous functions within a `ThreadPool` are transformed into asynchronous functions via `asyncio.wrap_future`.
     Synchronous generators are transformed into asynchronous generators.
     """
     if task.is_async:
@@ -23,9 +25,15 @@ def ascynchronize(task: Task) -> Task:
     else:
         @functools.wraps(task.func)
         async def wrapper(*args, **kwargs):
-            loop = asyncio.get_running_loop()
-            job = functools.partial(task.func, *args, **kwargs)
-            return await loop.run_in_executor(None, job)
+            future = Future()
+            def target(*args, **kwargs):
+                try:
+                    result = task.func(*args, **kwargs)
+                    future.set_result(result)
+                except Exception as e:
+                    future.set_exception(e)
+            tp.submit(target, args=args, kwargs=kwargs, daemon=task.daemon)
+            return await asyncio.wrap_future(future)
     
     return Task(
         func=wrapper,

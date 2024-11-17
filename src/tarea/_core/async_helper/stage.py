@@ -8,12 +8,13 @@ from ..util.asynchronize import ascynchronize
 from ..util.sentinel import StopSentinel
 
 if TYPE_CHECKING:
+    from ..util.thread_pool import ThreadPool
     from ..task import Task
 
 
 class AsyncProducer:
-    def __init__(self, task: Task, tg: asyncio.TaskGroup, n_consumers: int):
-        self.task = ascynchronize(task)
+    def __init__(self, task: Task, tg: asyncio.TaskGroup, tp: ThreadPool, n_consumers: int):
+        self.task = ascynchronize(task, tp)
         if task.concurrency > 1:
             raise RuntimeError(f"The first task in a pipeline ({task.func.__qualname__}) cannot have concurrency greater than 1")
         if task.join:
@@ -35,9 +36,9 @@ class AsyncProducer:
 
 
 class AsyncProducerConsumer:
-    def __init__(self, q_in: asyncio.Queue, task: Task, tg: asyncio.TaskGroup, n_consumers: int):
+    def __init__(self, q_in: asyncio.Queue, task: Task, tg: asyncio.TaskGroup, tp: ThreadPool, n_consumers: int):
         self.q_in = q_in
-        self.task = ascynchronize(task)
+        self.task = ascynchronize(task, tp)
         self.tg = tg
         self.n_consumers = n_consumers
         self.q_out = asyncio.Queue(maxsize=task.throttle)

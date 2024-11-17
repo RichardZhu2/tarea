@@ -19,6 +19,13 @@ class ThreadPool:
         for thread in self._threads:
             thread.daemon or thread.join()
 
+    async def __aenter__(self):
+        return self
+    
+    async def __aexit__(self, ev, et, tb):
+        for thread in self._threads:
+            thread.daemon or thread.join()
+
     @property
     def has_error(self):
         return not self._error_queue.empty()
