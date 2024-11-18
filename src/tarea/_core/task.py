@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import functools
 import inspect
-from typing import Callable
+from typing import Callable, Dict, Optional, Tuple
 
 
 class Task:
@@ -13,7 +14,8 @@ class Task:
         join: bool = False,
         concurrency: int = 1,
         throttle: int = 0,
-        daemon: bool = False
+        daemon: bool = False,
+        bind: Optional[Tuple[Tuple, Dict]] = None
     ):
         if not isinstance(concurrency, int):
             raise TypeError("concurrency must be an integer")
@@ -43,7 +45,7 @@ class Task:
         if self.is_async and daemon:
             raise ValueError("daemon cannot be True for an async task")
         
-        self.func = func
+        self.func = func if bind is None else functools.partial(func, *bind[0], **bind[1])
         self.branch = branch
         self.join = join
         self.concurrency = concurrency
