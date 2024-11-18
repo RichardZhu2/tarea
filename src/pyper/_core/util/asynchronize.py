@@ -37,7 +37,6 @@ def ascynchronize(task: Task, tp: ThreadPool) -> Task:
     
     return Task(
         func=wrapper,
-        branch=task.branch,
         join=task.join,
         concurrency=task.concurrency,
         throttle=task.throttle

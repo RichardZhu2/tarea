@@ -12,17 +12,16 @@ class task:
     A Pipeline initialized in this way consists of one Task, and can be piped into other Pipelines.
 
     The behaviour of each task within a Pipeline is determined by the parameters:
-    `branch`: allows the function to yield multiple results when set to `True`, instead of returning a single result
     `join`: allows the function to take all previous results as input, instead of single results
     `concurrency`: runs the functions with multiple (async or threaded) workers
     `throttle`: limits the number of results the function is able to produce when all consumers are busy
     """
     @overload
-    def __new__(cls, func: None = None, /, *, branch: bool = False, join: bool = False, concurrency: int = 1, throttle: int = 0, daemon: bool = False, bind: Optional[Tuple[Tuple, Dict]] = None) -> Callable[..., Pipeline]:
+    def __new__(cls, func: None = None, /, *, join: bool = False, concurrency: int = 1, throttle: int = 0, daemon: bool = False, bind: Optional[Tuple[Tuple, Dict]] = None) -> Callable[..., Pipeline]:
         """Enable type hints for functions decorated with `@task()`."""
     
     @overload
-    def __new__(cls, func: Callable, /, *, branch: bool = False, join: bool = False, concurrency: int = 1, throttle: int = 0, daemon: bool = False, bind: Optional[Tuple[Tuple, Dict]] = None) -> Pipeline:
+    def __new__(cls, func: Callable, /, *, join: bool = False, concurrency: int = 1, throttle: int = 0, daemon: bool = False, bind: Optional[Tuple[Tuple, Dict]] = None) -> Pipeline:
         """Enable type hints for functions decorated with `@task`."""
     
     def __new__(
@@ -30,7 +29,6 @@ class task:
         func: Optional[Callable] = None,
         /,
         *,
-        branch: bool = False,
         join: bool = False,
         concurrency: int = 1,
         throttle: int = 0,
@@ -39,8 +37,8 @@ class task:
     ):
         # Classic decorator trick: @task() means func is None, @task without parentheses means func is passed. 
         if func is None:
-            return functools.partial(cls, branch=branch, join=join, concurrency=concurrency, throttle=throttle, daemon=daemon, bind=bind)
-        return Pipeline([Task(func=func, branch=branch, join=join, concurrency=concurrency, throttle=throttle, daemon=daemon, bind=bind)])
+            return functools.partial(cls, join=join, concurrency=concurrency, throttle=throttle, daemon=daemon, bind=bind)
+        return Pipeline([Task(func=func, join=join, concurrency=concurrency, throttle=throttle, daemon=daemon, bind=bind)])
     
     @staticmethod
     def bind(*args, **kwargs) -> Optional[Tuple[Tuple, Dict]]:

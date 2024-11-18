@@ -45,7 +45,7 @@ class _JoiningDequeue(Dequeue):
 class Enqueue:
     """Puts output from a task onto an output queue."""
     def __new__(cls, q_out: queue.Queue, task: Task):
-        if task.branch:
+        if task.is_gen:
             instance = object.__new__(_BranchingEnqueue)
         else:
             instance = object.__new__(_SingleEnqueue)

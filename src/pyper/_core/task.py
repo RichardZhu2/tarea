@@ -10,7 +10,6 @@ class Task:
     def __init__(
         self,
         func: Callable,
-        branch: bool = False,
         join: bool = False,
         concurrency: int = 1,
         throttle: int = 0,
@@ -36,17 +35,11 @@ class Task:
             or inspect.isasyncgenfunction(func) \
             or inspect.iscoroutinefunction(func.__call__) \
             or inspect.isasyncgenfunction(func.__call__)
-
-        if branch and not self.is_gen:
-            raise TypeError("A branching task must exhibit generator behaviour (use the yield keyword)")
-        if not branch and self.is_gen:
-            raise TypeError("A non-branching task cannot be a generator")
         
         if self.is_async and daemon:
             raise ValueError("daemon cannot be True for an async task")
         
         self.func = func if bind is None else functools.partial(func, *bind[0], **bind[1])
-        self.branch = branch
         self.join = join
         self.concurrency = concurrency
         self.throttle = throttle
