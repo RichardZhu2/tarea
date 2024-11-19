@@ -20,7 +20,6 @@ classifiers = [
     "Topic :: Software Development",
     "Framework :: AsyncIO",
     "Framework :: Threading",
-    "Framework :: Pyper",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.11",
