@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/pyper
+      url: https://pypi.org/p/python-pyper
     permissions:
       id-token: write
     steps:
