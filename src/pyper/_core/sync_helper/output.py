@@ -35,11 +35,11 @@ class PipelineOutput:
         with ThreadPool() as tp:
             q_out = self._get_q_out(tp, *args, **kwargs)
             while True:
-                if tp.has_error:
-                    raise tp.get_error()
+                tp.raise_error_if_exists()
                 try:
                     # Use the timeout strategy for unblocking main thread without busy waiting
                     if (data := q_out.get(timeout=1)) is StopSentinel:
+                        tp.raise_error_if_exists()
                         break
                     yield data
                 except queue.Empty:
