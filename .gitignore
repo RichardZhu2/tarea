@@ -2,4 +2,8 @@
 .vscode/
 
 __pycache__/
-.venv
+.pytest_cache/
+.venv/
+src/*.egg-info/
+
+.tox/

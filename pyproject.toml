@@ -3,7 +3,6 @@ requires = ["setuptools", "setuptools-scm", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
-write_to = "src/pyper/_version.py"
 
 [project]
 name = "python-pyper"
@@ -33,3 +32,6 @@ classifiers = [
 Documentation = "https://pyper-dev.github.io/pyper/"
 Repository = "https://github.com/pyper-dev/pyper"
 Issues = "https://github.com/pyper-dev/pyper/issues"
+
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "function"
