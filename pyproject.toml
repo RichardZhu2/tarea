@@ -3,7 +3,7 @@ requires = ["setuptools", "setuptools-scm", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
-write_to = "pyper/_version.py"
+write_to = "src/pyper/_version.py"
 
 [project]
 name = "python-pyper"
