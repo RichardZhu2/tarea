@@ -1,6 +1,9 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools", "setuptools-scm", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+write_to = "pyper/_version.py"
 
 [project]
 name = "python-pyper"
@@ -25,3 +28,8 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13"
 ]
+
+[project.urls]
+Documentation = "https://pyper-dev.github.io/pyper/"
+Repository = "https://github.com/pyper-dev/pyper"
+Issues = "https://github.com/pyper-dev/pyper/issues"
