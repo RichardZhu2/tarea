@@ -38,6 +38,8 @@ jobs:
         run: tox
 
   coverage:
+    environment:
+      name: test
     needs: test
     runs-on: ubuntu-latest
 
