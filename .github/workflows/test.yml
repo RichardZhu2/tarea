@@ -35,7 +35,7 @@ jobs:
           pip install tox
 
       - name: Run tests with Tox
-        run: tox
+        run: tox -e ${{ matrix.python-version }}
 
   coverage:
     environment:
