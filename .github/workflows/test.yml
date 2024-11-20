@@ -1,12 +1,18 @@
-name: Run Tests with Tox
+name: Tests
 
 on:
   push:
     branches:
       - main
+    paths:
+      - "src/pyper/**"
+      - "tests/**"
   pull_request:
     branches:
       - main
+    paths:
+      - "src/pyper/**"
+      - "tests/**"
 
 jobs:
   test:
