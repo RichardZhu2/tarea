@@ -1,22 +1,38 @@
 <p align="center">
-  <img src="assets/pyper.png" alt="Pyper" style="width: 500px;">
+  <img src="https://raw.githubusercontent.com/pyper-dev/pyper/refs/heads/main/assets/pyper.png" alt="Pyper" style="width: 500px;">
 </p>
-<p align="center"
+<p align="center" style="font-size: 1.5em;">
     <em>Concurrent Python made simple</em>
 </p>
 
+</p>
+
+<p align="center">
+<a href="https://github.com/pyper-dev/pyper/actions/workflows/test.yml" target="_blank">
+    <img src="https://github.com/pyper-dev/pyper/actions/workflows/test.yml/badge.svg" alt="Test">
+</a>
+<a href="https://coveralls.io/github/pyper-dev/pyper" target="_blank">
+    <img src="https://coveralls.io/repos/github/pyper-dev/pyper/badge.svg" alt="Coverage">
+</a>
+<a href="https://pypi.org/project/python-pyper" target="_blank">
+    <img src="https://img.shields.io/pypi/v/python-pyper?color=%2334D058&label=pypi%20package" alt="Package version">
+</a>
+<a href="https://pypi.org/project/python-pyper" target="_blank">
+    <img src="https://img.shields.io/pypi/pyversions/python-pyper.svg?color=%2334D058" alt="Supported Python versions">
+</a>
+</p>
 
 ---
 
 Pyper is a generalized framework for concurrent data-processing, based on functional programming patterns. Used for 🌐 **Data Collection**, 🔀 **ETL systems**, and general-purpose 🛠️ **Python Scripting**
 
-See the [Documentation]()
+See the [Documentation](https://pyper-dev.github.io/pyper/)
 
 Key features:
 
-* 💡**Intuitive Code**: Easy to learn, easy to think about. Implements intuitive abstractions to seamlessly unify threaded and asynchronous work.
-* 🚀 **Functional Paradigm**: Python functions are the building blocks of data pipelines. Lets you write clean, reusable code without effort.
-* 🛡️ **Safety**: Hides the heavy lifting of underlying task creation/execution. No more worrying about race conditions, memory leaks, and thread-level error handling.
+* 💡**Intuitive API**: Easy to learn, easy to think about. Implements clean abstractions to seamlessly unify threaded and asynchronous work.
+* 🚀 **Functional Paradigm**: Python functions are the building blocks of data pipelines. Let's you write clean, reusable code naturally.
+* 🛡️ **Safety**: Hides the heavy lifting of underlying task creation and execution. No more worrying about race conditions, memory leaks, and thread-level error handling.
 * ⚡ **Efficiency**: Designed from the ground up for lazy execution, using queues, workers, and generators.
 * ✨ **Pure Python**: Lightweight, with zero sub-dependencies.
 
@@ -25,8 +41,10 @@ Key features:
 Install the latest version using `pip`:
 
 ```console
-$ pip install pyper
+$ pip install python-pyper
 ```
+
+(Note that `python-pyper` is the pypi registered package)
 
 ## Example
 
@@ -68,6 +86,7 @@ async def print_sum(data):
 
 
 async def main():
+    # Define a pipeline of tasks using `pyper.task`
     run = task(step1) \
         >> task(step2, concurrency=20) \
         >> task(step3, concurrency=20) \
@@ -89,7 +108,9 @@ In our pipeline:
 
 * `task(step3, concurrency=20)` spins up 20 threaded workers, taking each value as input and returning an output
 
-The script therefore takes ~2 seconds to complete, as stage 2 and 3 in the pipeline only take the 1 second of sleep time, performed concurrently. If you'd like, experiment with tweaking the `limit` and `concurrency` values for yourself.
+The script therefore takes ~2 seconds to complete, as `step2` and `step3` in the pipeline only take the 1 second of sleep time, performed concurrently. If you'd like, experiment with tweaking the `limit` and `concurrency` values for yourself.
+
+---
 
 <details markdown="1">
 <summary><u>What does the logic translate to in non-concurrent code?</u></summary>
@@ -202,9 +223,9 @@ async def main():
     await run(20) # takes ~2 seconds
 ```
 
-This implementation achieves the basic desired concurrent data flow, but still lacks some quality-of-life features that Pyper takes care of, like thread-level error handling.
+This implementation achieves the basic desired concurrent data flow, but still lacks some quality-of-life features that Pyper takes care of, like error handling within threads.
 
-Pyper abstracts away the complexities of managing queues and workers, so that this code can be reduced to the two-line main function in the example above.
+Pyper handles the complexities of managing queues and workers, so that this code can be reduced to the two-line main function in the example above.
 
 </details>
 
@@ -248,6 +269,7 @@ def main():
         >> task(step2, concurrency=20) \
         >> task(step3, concurrency=20) \
         & print_sum
+    # Run synchronously
     run(limit=20)
 
 
@@ -255,7 +277,7 @@ if __name__ == "__main__":
     main() # takes ~2 seconds
 ```
 
-A pipeline consisting of _at least one asynchronous function_ becomes an `AsyncPipeline`, which exposes the same logical function, provided `async` and `await` syntax in all of the obvious places. This makes it effortless to unify synchronously defined and asynchronously defined funcions where need be.
+A pipeline consisting of _at least one asynchronous function_ becomes an `AsyncPipeline`, which exposes the same logical function, provided `async` and `await` syntax in all of the obvious places. This makes it effortless to unify synchronously defined and asynchronously defined functions where need be.
 
 </details>
 
@@ -263,7 +285,7 @@ A pipeline consisting of _at least one asynchronous function_ becomes an `AsyncP
 
 To explore more of Pyper's features, see some real-world examples below:
 
-1. [Example]()
+1. (_to do_)
 
 ## Dependencies
 
