@@ -1,0 +1,10 @@
+_site/
+.sass-cache/
+.jekyll-cache/
+.jekyll-metadata
+
+.bundle/
+vendor/
+
+# GitHub pages does not need the lock file
+Gemfile.lock

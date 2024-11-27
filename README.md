@@ -1,10 +1,8 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/pyper-dev/pyper/refs/heads/main/assets/pyper.png" alt="Pyper" style="width: 500px;">
+  <img src="https://raw.githubusercontent.com/pyper-dev/pyper/refs/heads/main/docs/src/assets/img/pyper.png" alt="Pyper" style="width: 500px;">
 </p>
 <p align="center" style="font-size: 1.5em;">
     <em>Concurrent Python made simple</em>
-</p>
-
 </p>
 
 <p align="center">
@@ -44,9 +42,9 @@ Install the latest version using `pip`:
 $ pip install python-pyper
 ```
 
-(Note that `python-pyper` is the pypi registered package)
+Note that `python-pyper` is the [pypi](https://pypi.org/project/python-pyper) registered package.
 
-## Example
+## Usage
 
 Let's simulate a pipeline that performs a series of transformations on some data. 
 
@@ -87,10 +85,7 @@ async def print_sum(data):
 
 async def main():
     # Define a pipeline of tasks using `pyper.task`
-    run = task(step1) \
-        >> task(step2, concurrency=20) \
-        >> task(step3, concurrency=20) \
-        & print_sum
+    run = task(step1) | task(step2, concurrency=20) | task(step3, concurrency=20) > print_sum
     await run(limit=20)
 
 
@@ -121,7 +116,7 @@ Having defined the logical operations we want to perform on our data as function
 
 ```python
 # Analogous to:
-# pipeline = task(step1) >> task(step2) >> task(step3)
+# pipeline = task(step1) | task(step2) | task(step3)
 async def pipeline(limit):
     for data in step1(limit):
         data = await step2(data)
@@ -130,7 +125,7 @@ async def pipeline(limit):
 
 
 # Analogous to:
-# run = pipeline & print_sum
+# run = pipeline > print_sum
 async def run(limit):
     await print_sum(pipeline(limit))
 
@@ -139,7 +134,7 @@ async def main():
     await run(20) # takes ~40 seconds
 ```
 
-Pyper uses the `>>` syntax as an intuitive representation of this input-output piping between tasks.
+Pyper uses the `|` (motivated by Unix's pipe operator) syntax as a representation of this input-output piping between tasks.
 
 </details>
 
@@ -266,9 +261,9 @@ def print_sum(data):
 
 def main():
     run = task(step1) \
-        >> task(step2, concurrency=20) \
-        >> task(step3, concurrency=20) \
-        & print_sum
+        | task(step2, concurrency=20) \
+        | task(step3, concurrency=20) \
+        > print_sum
     # Run synchronously
     run(limit=20)
 
@@ -283,9 +278,7 @@ A pipeline consisting of _at least one asynchronous function_ becomes an `AsyncP
 
 ## Examples
 
-To explore more of Pyper's features, see some real-world examples below:
-
-1. (_to do_)
+To explore more of Pyper's features, see some further [examples](https://pyper-dev.github.io/pyper/docs/Examples)
 
 ## Dependencies
 
