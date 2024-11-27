@@ -1,0 +1,37 @@
+title: Pyper Docs
+description: Concurrent Python made simple
+theme: just-the-docs
+
+url: https://pyper-dev.github.io/pyper
+source: src
+
+color_scheme: dark
+
+logo: "/assets/img/pyper.png"
+favicon_ico: "/assets/img/favicon.ico"
+search_enabled: true
+nav_enabled: true
+
+search:
+  heading_level: 2
+  previews: 3
+  preview_words_before: 5
+  preview_words_after: 10
+  tokenizer_separator: /[\s/]+/
+  rel_url: true
+  button: false
+  focus_shortcut_key: 'k'
+
+# Aux links for the upper right navigation
+aux_links:
+  "GitHub":
+    - "//github.com/pyper-dev/pyper"
+aux_links_new_tab: true
+
+callouts:
+  info:
+    title: Info
+    color: blue
+  warning:
+    title: Warning
+    color: yellow
