@@ -38,7 +38,7 @@ class PipelineOutput:
                 tp.raise_error_if_exists()
                 try:
                     # Use the timeout strategy for unblocking main thread without busy waiting
-                    if (data := q_out.get(timeout=1)) is StopSentinel:
+                    if (data := q_out.get(timeout=0.1)) is StopSentinel:
                         tp.raise_error_if_exists()
                         break
                     yield data

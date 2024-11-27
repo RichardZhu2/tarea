@@ -87,12 +87,12 @@ def test_async_task():
     assert isinstance(p, AsyncPipeline)
 
 def test_piped_async_task():
-    p = task(afunc) >> task(func)
+    p = task(afunc) | task(func)
     assert isinstance(p, AsyncPipeline)
 
 def test_invalid_pipe():
     try:
-        task(func) >> 1
+        task(func) | 1
     except Exception as e:
         assert isinstance(e, TypeError)
     else:
@@ -100,7 +100,7 @@ def test_invalid_pipe():
 
 def test_invalid_async_pipe():
     try:
-        task(afunc) >> 1
+        task(afunc) | 1
     except Exception as e:
         assert isinstance(e, TypeError)
     else:
@@ -108,7 +108,7 @@ def test_invalid_async_pipe():
 
 def test_invalid_consumer():
     try:
-        task(func) & 1
+        task(func) > 1
     except Exception as e:
         assert isinstance(e, TypeError)
     else:
@@ -116,7 +116,7 @@ def test_invalid_consumer():
 
 def test_invalid_async_consumer():
     try:
-        task(afunc) & func
+        task(afunc) > func
     except Exception as e:
         assert isinstance(e, TypeError)
     else:
