@@ -32,23 +32,23 @@ async def consumer(data):
 
 @pytest.mark.asyncio
 async def test_pipeline():
-    p = task(f1) >> task(f2)
+    p = task(f1) | task(f2)
     assert p(1).__next__() == 1
 
 @pytest.mark.asyncio
 async def test_joined_pipeline():
-    p = task(af1) >> task(af2) >> task(af4, join=True)
+    p = task(af1) | task(af2) | task(af4, join=True)
     assert await p(1).__anext__() == 1
 
 @pytest.mark.asyncio
 async def test_consumer():
-    p = task(af1) >> task(af2) & consumer
+    p = task(af1) | task(af2) > consumer
     assert await p(1) == 1
 
 @pytest.mark.asyncio
 async def test_invalid_first_stage_concurrency():
     try:
-        p = task(af1, concurrency=2) >> task(af2) & consumer
+        p = task(af1, concurrency=2) | task(af2) > consumer
         await p(1)
     except Exception as e:
         assert isinstance(e, RuntimeError)
@@ -58,7 +58,7 @@ async def test_invalid_first_stage_concurrency():
 @pytest.mark.asyncio
 async def test_invalid_first_stage_join():
     try:
-        p = task(af1, join=True) >> task(af2) & consumer
+        p = task(af1, join=True) | task(af2) > consumer
         await p(1)
     except Exception as e:
         assert isinstance(e, RuntimeError)
@@ -68,7 +68,7 @@ async def test_invalid_first_stage_join():
 @pytest.mark.asyncio
 async def test_error_handling():
     try:
-        p = task(af1) >> task(af2) >> task(af3) & consumer
+        p = task(af1) | task(af2) | task(af3) > consumer
         await p(1)
     except Exception as e:
         assert isinstance(e, RuntimeError)
@@ -77,13 +77,13 @@ async def test_error_handling():
     
 @pytest.mark.asyncio
 async def test_unified_pipeline():
-    p = task(af1) >> task(f1) >> task(af2) >> task(f2) & consumer
+    p = task(af1) | task(f1) | task(af2) | task(f2) > consumer
     assert await p(1) == 1
 
 @pytest.mark.asyncio
 async def test_error_handling_in_daemon():
     try:
-        p = task(af1) >> task(af2) >> task(f3, daemon=True) & consumer
+        p = task(af1) | task(af2) | task(f3, daemon=True) > consumer
         await p(1)
     except Exception as e:
         assert isinstance(e, RuntimeError)

@@ -7,6 +7,9 @@ from typing import Callable, Dict, Optional, Tuple
 
 class Task:
     """The representation of a function within a Pipeline."""
+
+    __slots__ = "is_gen", "is_async", "func", "join", "concurrency", "throttle", "daemon"
+
     def __init__(
         self,
         func: Callable,

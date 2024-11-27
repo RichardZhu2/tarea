@@ -11,11 +11,11 @@ if TYPE_CHECKING:
 
 
 class Pipeline:
-    """A sequence of at least 1 connected Tasks.
+    """A sequence of at least 1 Tasks.
     
     Two pipelines can be piped into another via:
     ```python
-    new_pipeline = p1 >> p2
+    new_pipeline = p1 | p2
     # OR
     new_pipeline = p1.pipe(p2)
     ```
@@ -43,8 +43,8 @@ class Pipeline:
             raise TypeError(f"{other} of type {type(other)} cannot be piped into a Pipeline")
         return Pipeline(self.tasks + other.tasks)
 
-    def __rshift__(self, other: Pipeline) -> Pipeline:
-        """Allow the syntax `pipeline1 >> pipeline2`."""
+    def __or__(self, other: Pipeline) -> Pipeline:
+        """Allow the syntax `pipeline1 | pipeline2`."""
         return self.pipe(other)
     
     def consume(self, other: Callable) -> Callable:
@@ -55,8 +55,8 @@ class Pipeline:
             return consumer
         raise TypeError(f"{other} must be a callable that takes a generator")
 
-    def __and__(self, other: Callable) -> Callable:
-        """Allow the syntax `pipeline & consumer`."""
+    def __gt__(self, other: Callable) -> Callable:
+        """Allow the syntax `pipeline > consumer`."""
         return self.consume(other)
     
     def __repr__(self):
