@@ -17,7 +17,7 @@ def f4(a1, a2, a3, data, k1, k2):
 
 def f5(data):
     # Make queue monitor timeout on main thread
-    time.sleep(1.2)
+    time.sleep(0.2)
     raise RuntimeError
 
 def consumer(data):
