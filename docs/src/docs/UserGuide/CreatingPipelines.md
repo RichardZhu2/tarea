@@ -45,7 +45,7 @@ In addition to functions, anything `callable` in Python can be wrapped in `task`
 from pyper import task
 
 class Doubler:
-    def __call__(self, x):
+    def __call__(self, x: int):
         return 2 * x
 
 pipeline1 = task(Doubler())

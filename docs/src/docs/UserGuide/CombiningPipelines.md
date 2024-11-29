@@ -12,7 +12,6 @@ permalink: /docs/UserGuide/CombiningPipelines
 1. TOC
 {:toc}
 
-
 ## Piping and the `|` Operator 
 
 The `|` operator (inspired by UNIX syntax) is used to pipe one pipeline into another. This is syntactic sugar for the `Pipeline.pipe` method.
@@ -45,7 +44,6 @@ p4 = task(lambda x: x ** 2)
 new_new_pipeline = p0 | new_pipeline | p4
 new_new_new_pipeline = new_pipeline | new_new_pipeline
 ```
-
 
 ## Consumer Functions and the `>` Operator
 
@@ -89,11 +87,8 @@ run = step1.pipe(step2).consume(JsonFileWriter("data.json"))
 run(limit=10)
 ```
 
-
-The operator `>` is obviously not to be taken to mean 'greater than' when used in these contexts.
-
 {: .info}
-Pyper comes with fantastic IDE intellisense support which understands these operators, and will always show you what the resulting type of a variable is (including the input and output type specs for pipelines)
+Pyper comes with fantastic IDE intellisense support which understands these operators, and will always show you which variables are `Pipeline` or `AsyncPipeline` objects; this also preserves type hints from your own functions, showing you the parameter and return type specs for each pipeline or consumer
 
 ## Asynchronous Code
 
@@ -111,10 +106,10 @@ assert isinstance(task(func), AsyncPipeline)
 
 When combining pipelines, the following rule applies:
 
-* `Pipeline` > `Pipeline` = `Pipeline`
-* `Pipeline` > `AsyncPipeline` = `AsyncPipeline`
-* `AsyncPipeline` > `Pipeline` = `AsyncPipeline`
-* `AsyncPipeline` > `AsyncPipeline` = `AsyncPipeline`
+* `Pipeline` + `Pipeline` = `Pipeline`
+* `Pipeline` + `AsyncPipeline` = `AsyncPipeline`
+* `AsyncPipeline` + `Pipeline` = `AsyncPipeline`
+* `AsyncPipeline` + `AsyncPipeline` = `AsyncPipeline`
 
 In other words:
 
