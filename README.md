@@ -51,11 +51,12 @@ Let's simulate a pipeline that performs a series of transformations on some data
 ```python
 import asyncio
 import time
+import typing
 
 from pyper import task
 
 
-def step1(limit):
+def step1(limit: int):
     """Generate some data."""
     for i in range(limit):
         yield i
@@ -75,7 +76,7 @@ def step3(data: int):
     return 2 * data - 1
 
 
-async def print_sum(data):
+async def print_sum(data: typing.AsyncGenerator[int]):
     """Print the sum of values from a data stream."""
     total = 0
     async for output in data:
@@ -117,7 +118,7 @@ Having defined the logical operations we want to perform on our data as function
 ```python
 # Analogous to:
 # pipeline = task(step1) | task(step2) | task(step3)
-async def pipeline(limit):
+async def pipeline(limit: int):
     for data in step1(limit):
         data = await step2(data)
         data = step3(data)
@@ -126,7 +127,7 @@ async def pipeline(limit):
 
 # Analogous to:
 # run = pipeline > print_sum
-async def run(limit):
+async def run(limit: int):
     await print_sum(pipeline(limit))
 
 
@@ -152,7 +153,7 @@ Concurrent programming in Python is notoriously difficult to get right. In a con
 The basic approach to doing this is by using queues-- a simplified and very unabstracted implementation could be:
 
 ```python
-async def pipeline(limit):
+async def pipeline(limit: int):
     q1 = asyncio.Queue()
     q2 = asyncio.Queue()
     q3 = asyncio.Queue()
@@ -210,7 +211,7 @@ async def pipeline(limit):
             yield data
 
 
-async def run(limit):
+async def run(limit: int):
     await print_sum(pipeline(limit))
 
 
@@ -233,11 +234,12 @@ No-- not every program is asynchronous, so Pyper pipelines are by default synchr
 
 ```python
 import time
+import typing
 
 from pyper import task
 
 
-def step1(limit):
+def step1(limit: int):
     for i in range(limit):
         yield i
 
@@ -252,7 +254,7 @@ def step3(data: int):
     return 2 * data - 1
 
 
-def print_sum(data):
+def print_sum(data: typing.Generator[int]):
     total = 0
     for output in data:
         total += output

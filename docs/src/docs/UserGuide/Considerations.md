@@ -74,12 +74,13 @@ The advantage of using `daemon` threads is that they do not prevent the main pro
 Therefore, there is a simple consideration that determines whether to set `daemon=True` on a particular task:
 
 {: .info}
-Tasks can be created with `daemon=True` when they do NOT reach out to external resources.
+Tasks can be created with `daemon=True` when they do NOT reach out to external resources
 
-This includes:
- * Pure functions, which simply take an input and generate an output
- * Functions that depend on or modify some external Python state, like an `Object` or a `Class`
+This includes all **pure functions** (functions which simply take an input and generate an output, without mutating external state).
 
 Functions that should _not_ use `daemon` threads include:
 * Writing to a database
-* Reading from a file
+* Processing a file
+* Making a network request
+
+Recall that only synchronous tasks can be created with `daemon=True`.
