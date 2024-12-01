@@ -12,7 +12,7 @@ permalink: /docs/UserGuide/Considerations
 1. TOC
 {:toc}
 
-## Just Add More Workers?
+## How Many Workers?
 
 Pyper is a framework for concurrent programming, so it is worth discussing in a little more detail what the [concurrency](TaskParameters#concurrency) parameter is doing. Under the hood, this is an integer which determines:
 
@@ -34,7 +34,7 @@ A function with this property is referred as IO-bound, whereas a function that h
 * Sorting and searching
 
 {: .warning}
-Increasing the number of workers for a task does not improve performance if the task is CPU-bound
+Increasing the number of workers for a CPU-bound task does not improve performance
 
 To experiment for yourself, try running the following script with a range of concurrency values. You'll notice that a higher concurrency will in fact decrease performance, due to the overhead of creating threads.
 
