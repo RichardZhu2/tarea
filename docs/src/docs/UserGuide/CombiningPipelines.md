@@ -125,7 +125,7 @@ Consumer functions will, however need to adapt to asynchronous output. For examp
 ```python
 import asyncio
 import json
-from typing import Dict, Iterable
+from typing import AsyncIterable, Dict
 
 from pyper import task
 
@@ -142,7 +142,7 @@ class JsonFileWriter:
     def __init__(self, filepath):
         self.filepath = filepath
     
-    async def __call__(self, data: Iterable[Dict]):
+    async def __call__(self, data: AsyncIterable[Dict]):
         data_list = [row async for row in data]
         with open(self.filepath, 'w', encoding='utf-8') as f:
             json.dump(data_list, f, indent=4)

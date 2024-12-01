@@ -51,7 +51,7 @@ Let's simulate a pipeline that performs a series of transformations on some data
 ```python
 import asyncio
 import time
-import typing
+from typing import AsyncIterable
 
 from pyper import task
 
@@ -76,7 +76,7 @@ def step3(data: int):
     return 2 * data - 1
 
 
-async def print_sum(data: typing.AsyncGenerator[int]):
+async def print_sum(data: AsyncIterable[int]):
     """Print the sum of values from a data stream."""
     total = 0
     async for output in data:
@@ -234,7 +234,7 @@ No-- not every program is asynchronous, so Pyper pipelines are by default synchr
 
 ```python
 import time
-import typing
+from typing import Iterable
 
 from pyper import task
 
@@ -254,7 +254,7 @@ def step3(data: int):
     return 2 * data - 1
 
 
-def print_sum(data: typing.Generator[int]):
+def print_sum(data: Iterable[int]):
     total = 0
     for output in data:
         total += output
