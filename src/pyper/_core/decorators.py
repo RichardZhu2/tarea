@@ -1,13 +1,19 @@
 from __future__ import annotations
 
 import functools
+import sys
 import typing as t
 
 from .pipeline import AsyncPipeline, Pipeline
 from .task import Task
 
+if sys.version_info < (3, 10):  # pragma: no cover
+    from typing_extensions import ParamSpec
+else:
+    from typing import ParamSpec
 
-_P = t.ParamSpec('P')
+
+_P = ParamSpec('P')
 _R = t.TypeVar('R')
 _ArgsKwargs: t.TypeAlias = t.Optional[t.Tuple[t.Tuple[t.Any], t.Dict[str, t.Any]]]
 

@@ -1,18 +1,24 @@
 from __future__ import annotations
 
 import inspect
+import sys
 import typing as t
 
 from .async_helper.output import AsyncPipelineOutput
 from .sync_helper.output import PipelineOutput
 
+if sys.version_info < (3, 10):  # pragma: no cover
+    from typing_extensions import ParamSpec
+else:
+    from typing import ParamSpec
+
 if t.TYPE_CHECKING:
     from .task import Task
 
 
-_P = t.ParamSpec('P')
+_P = ParamSpec('P')
 _R = t.TypeVar('R')
-_P_Other = t.ParamSpec("P_Other")
+_P_Other = ParamSpec("P_Other")
 _R_Other = t.TypeVar("R_Other")
 
 
@@ -90,7 +96,7 @@ class Pipeline(t.Generic[_P, _R]):
         return self.consume(other)
     
     def __repr__(self):
-        return f"{self.__class__.__name__} {[task.func for task in self.tasks]}"
+        return f"<{self.__class__.__name__} {[task.func for task in self.tasks]}>"
 
 
 class AsyncPipeline(Pipeline[_P, _R]):
