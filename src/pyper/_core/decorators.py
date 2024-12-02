@@ -25,84 +25,84 @@ class task:
     """
     @t.overload
     def __new__(
-        cls,
-        func: None = None,
-        /,
-        *,
-        join: bool = False,
-        concurrency: int = 1,
-        throttle: int = 0,
-        daemon: bool = False,
-        bind: _ArgsKwargs = None
-    ) -> t.Type[task]: ...
+            cls,
+            func: None = None,
+            /,
+            *,
+            join: bool = False,
+            concurrency: int = 1,
+            throttle: int = 0,
+            daemon: bool = False,
+            multiprocess: bool = False,
+            bind: _ArgsKwargs = None) -> t.Type[task]: ...
     
     @t.overload
     def __new__(
-        cls,
-        func: t.Callable[_P, t.Awaitable[_R]],
-        /,
-        *,
-        join: bool = False,
-        concurrency: int = 1,
-        throttle: int = 0,
-        daemon: bool = False,
-        bind: _ArgsKwargs = None
-    ) -> AsyncPipeline[_P, _R]: ...
+            cls,
+            func: t.Callable[_P, t.Awaitable[_R]],
+            /,
+            *,
+            join: bool = False,
+            concurrency: int = 1,
+            throttle: int = 0,
+            daemon: bool = False,
+            multiprocess: bool = False,
+            bind: _ArgsKwargs = None) -> AsyncPipeline[_P, _R]: ...
     
     @t.overload
     def __new__(
-        cls,
-        func: t.Callable[_P, t.AsyncGenerator[_R]],
-        /,
-        *,
-        join: bool = False,
-        concurrency: int = 1,
-        throttle: int = 0,
-        daemon: bool = False,
-        bind: _ArgsKwargs = None
-    ) -> AsyncPipeline[_P, _R]: ...
+            cls,
+            func: t.Callable[_P, t.AsyncGenerator[_R]],
+            /,
+            *,
+            join: bool = False,
+            concurrency: int = 1,
+            throttle: int = 0,
+            daemon: bool = False,
+            multiprocess: bool = False,
+            bind: _ArgsKwargs = None) -> AsyncPipeline[_P, _R]: ...
+        
+    @t.overload
+    def __new__(
+            cls,
+            func: t.Callable[_P, t.Generator[_R]],
+            /,
+            *,
+            join: bool = False,
+            concurrency: int = 1,
+            throttle: int = 0,
+            daemon: bool = False,
+            multiprocess: bool = False,
+            bind: _ArgsKwargs = None) -> Pipeline[_P, _R]: ...
     
     @t.overload
     def __new__(
-        cls,
-        func: t.Callable[_P, t.Generator[_R]],
-        /,
-        *,
-        join: bool = False,
-        concurrency: int = 1,
-        throttle: int = 0,
-        daemon: bool = False,
-        bind: _ArgsKwargs = None
-    ) -> Pipeline[_P, _R]: ...
-    
-    @t.overload
-    def __new__(
-        cls,
-        func: t.Callable[_P, _R],
-        /,
-        *,
-        join: bool = False,
-        concurrency: int = 1,
-        throttle: int = 0,
-        daemon: bool = False,
-        bind: _ArgsKwargs = None
-    ) -> Pipeline[_P, _R]: ...
+            cls,
+            func: t.Callable[_P, _R],
+            /,
+            *,
+            join: bool = False,
+            concurrency: int = 1,
+            throttle: int = 0,
+            daemon: bool = False,
+            multiprocess: bool = False,
+            bind: _ArgsKwargs = None) -> Pipeline[_P, _R]: ...
 
     def __new__(
-        cls,
-        func: t.Optional[t.Callable] = None,
-        /,
-        *,
-        join: bool = False,
-        concurrency: int = 1,
-        throttle: int = 0,
-        daemon: bool = False,
-        bind: _ArgsKwargs = None
-    ):
+            cls,
+            func: t.Optional[t.Callable] = None,
+            /,
+            *,
+            join: bool = False,
+            concurrency: int = 1,
+            throttle: int = 0,
+            daemon: bool = False,
+            multiprocess: bool = False,
+            bind: _ArgsKwargs = None):
         # Classic decorator trick: @task() means func is None, @task without parentheses means func is passed. 
         if func is None:
-            return functools.partial(cls, join=join, concurrency=concurrency, throttle=throttle, daemon=daemon, bind=bind)
-        return Pipeline([Task(func=func, join=join, concurrency=concurrency, throttle=throttle, daemon=daemon, bind=bind)])
+            return functools.partial(cls, join=join, concurrency=concurrency, throttle=throttle, daemon=daemon, multiprocess=multiprocess, bind=bind)
+        return Pipeline([Task(func=func, join=join, concurrency=concurrency, throttle=throttle, daemon=daemon, multiprocess=multiprocess, bind=bind)])
     
     @staticmethod
     def bind(*args, **kwargs) -> _ArgsKwargs:
