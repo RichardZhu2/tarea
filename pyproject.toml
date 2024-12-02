@@ -9,7 +9,7 @@ name = "python-pyper"
 dynamic = ["version"]
 description = "Concurrent Python made simple"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.8"
 authors = [
     { name = "Richard Zhu", email = "richard.zhu2@gmail.com" },
 ]
@@ -23,9 +23,16 @@ classifiers = [
     "Framework :: AsyncIO",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13"
+]
+dependencies = [
+    # Typing support dependency only for Python versions < 3.10
+    "typing_extensions; python_version<'3.10'"
 ]
 
 [project.urls]
