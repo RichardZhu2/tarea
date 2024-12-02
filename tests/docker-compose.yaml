@@ -1,0 +1,34 @@
+version: "3.8"
+
+services:
+  python3.13:
+    container_name: test3.13
+    build:
+      context: ..
+      dockerfile: tests/Dockerfile
+      args:
+        PYTHON_VERSION: "3.13"
+
+  python3.12:
+    container_name: test3.12
+    build:
+      context: ..
+      dockerfile: tests/Dockerfile
+      args:
+        PYTHON_VERSION: "3.12"
+
+  python3.11:
+    container_name: test3.11
+    build:
+      context: ..
+      dockerfile: tests/Dockerfile
+      args:
+        PYTHON_VERSION: "3.11"
+
+  python3.10:
+    container_name: test3.10
+    build:
+      context: ..
+      dockerfile: tests/Dockerfile
+      args:
+        PYTHON_VERSION: "3.10"
