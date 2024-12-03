@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from concurrent.futures import ProcessPoolExecutor
 import sys
 from typing import TYPE_CHECKING
 
@@ -24,9 +25,9 @@ class AsyncProducer:
             task: Task,
             tg: TaskGroup,
             tp: ThreadPool,
-            pp,
+            pp: ProcessPoolExecutor,
             n_consumers: int):
-        self.task = ascynchronize(task, tp)
+        self.task = ascynchronize(task, tp, pp)
         if task.concurrency > 1:
             raise RuntimeError(f"The first task in a pipeline ({task.func.__qualname__}) cannot have concurrency greater than 1")
         if task.join:
@@ -54,10 +55,10 @@ class AsyncProducerConsumer:
             task: Task,
             tg: TaskGroup,
             tp: ThreadPool,
-            pp,
+            pp: ProcessPoolExecutor,
             n_consumers: int):
         self.q_in = q_in
-        self.task = ascynchronize(task, tp)
+        self.task = ascynchronize(task, tp, pp)
         self.tg = tg
         self.n_consumers = n_consumers
         self.q_out = asyncio.Queue(maxsize=task.throttle)

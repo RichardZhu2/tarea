@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from concurrent.futures import ProcessPoolExecutor
 import sys
 from typing import TYPE_CHECKING
 
@@ -21,7 +22,7 @@ class AsyncPipelineOutput:
     def __init__(self, pipeline: AsyncPipeline):
         self.pipeline = pipeline
 
-    def _get_q_out(self, tg: TaskGroup, tp: ThreadPool, pp: ProcessPool, *args, **kwargs) -> asyncio.Queue:
+    def _get_q_out(self, tg: TaskGroup, tp: ThreadPool, pp: ProcessPoolExecutor, *args, **kwargs) -> asyncio.Queue:
         """Feed forward each stage to the next, returning the output queue of the final stage."""
         q_out = None
         for task, next_task in zip(self.pipeline.tasks, self.pipeline.tasks[1:] + [None]):
@@ -39,22 +40,15 @@ class AsyncPipelineOutput:
     async def __call__(self, *args, **kwargs):
         """Call the pipeline, taking the inputs to the first task, and returning the output from the last task."""
         try:
-<<<<<<< HEAD
             # Unify async, threaded, and multiprocessed work by:
             # 1. using TaskGroup to execute asynchronous tasks
             # 2. using ThreadPool to execute threaded synchronous tasks
-            # 3. using ProcessPool to execute multiprocessed synchronous tasks
-            async with asyncio.TaskGroup() as tg, ThreadPool() as tp, ProcessPool as pp:
-                q_out = self._get_q_out(tg, tp, pp, *args, **kwargs)
-=======
-            # We unify async and thread-based concurrency by
-            # 1. using TaskGroup to spin up asynchronous tasks
-            # 2. using ThreadPool to spin up synchronous tasks
-            async with TaskGroup() as tg, ThreadPool() as tp:
-                q_out = self._get_q_out(tg, tp, *args, **kwargs)
->>>>>>> dev
-                while (data := await q_out.get()) is not StopSentinel:
-                    yield data
+            # 3. using ProcessPoolExecutor to execute multiprocessed synchronous tasks
+            async with TaskGroup() as tg:
+                with ThreadPool() as tp, ProcessPoolExecutor() as pp:
+                    q_out = self._get_q_out(tg, tp, pp, *args, **kwargs)
+                    while (data := await q_out.get()) is not StopSentinel:
+                        yield data
         except ExceptionGroup as eg:
-            raise eg.exceptions[0]
+            raise eg.exceptions[0] from None
         
