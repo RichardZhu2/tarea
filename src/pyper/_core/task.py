@@ -13,7 +13,7 @@ class Task:
         "is_async",
         "func",
         "join",
-        "concurrency",
+        "workers",
         "throttle",
         "multiprocess"
     )
@@ -22,14 +22,14 @@ class Task:
             self,
             func: Callable,
             join: bool = False,
-            concurrency: int = 1,
+            workers: int = 1,
             throttle: int = 0,
             multiprocess: bool = False,
             bind: Optional[Tuple[Tuple, Dict]] = None):
-        if not isinstance(concurrency, int):
-            raise TypeError("concurrency must be an integer")
-        if concurrency < 1:
-            raise ValueError("concurrency cannot be less than 1")
+        if not isinstance(workers, int):
+            raise TypeError("workers must be an integer")
+        if workers < 1:
+            raise ValueError("workers cannot be less than 1")
         if not isinstance(throttle, int):
             raise TypeError("throttle must be an integer")
         if throttle < 0:
@@ -51,6 +51,6 @@ class Task:
         
         self.func = func if bind is None else functools.partial(func, *bind[0], **bind[1])
         self.join = join
-        self.concurrency = concurrency
+        self.workers = workers
         self.throttle = throttle
         self.multiprocess = multiprocess

@@ -18,14 +18,14 @@ if TYPE_CHECKING:
 
 class AsyncProducer:
     def __init__(self, task: Task, next_task: Task):
-        if task.concurrency > 1:
-            raise RuntimeError(f"The first task in a pipeline ({task.func.__qualname__}) cannot have concurrency greater than 1")
+        if task.workers > 1:
+            raise RuntimeError(f"The first task in a pipeline ({task.func.__qualname__}) cannot have more than 1 worker")
         if task.join:
             raise RuntimeError(f"The first task in a pipeline ({task.func.__qualname__}) cannot join previous results")
         self.task = task
         self.q_out = asyncio.Queue(maxsize=task.throttle)
         
-        self._n_consumers = 1 if next_task is None else next_task.concurrency
+        self._n_consumers = 1 if next_task is None else next_task.workers
         self._enqueue = AsyncEnqueueFactory(self.q_out, self.task)
     
     async def _worker(self, *args, **kwargs):
@@ -42,8 +42,8 @@ class AsyncProducerConsumer:
     def __init__(self, q_in: asyncio.Queue, task: Task, next_task: Task):
         self.q_out = asyncio.Queue(maxsize=task.throttle)
 
-        self._n_workers = task.concurrency
-        self._n_consumers = 1 if next_task is None else next_task.concurrency
+        self._n_workers = task.workers
+        self._n_consumers = 1 if next_task is None else next_task.workers
         self._dequeue = AsyncDequeueFactory(q_in, task)
         self._enqueue = AsyncEnqueueFactory(self.q_out, task)
         self._workers_done = 0

@@ -21,8 +21,8 @@ class Producer:
             next_task: Task,
             q_err: Union[mp.Queue, queue.Queue],
             shutdown_event: Union[MpEvent, threading.Event]):
-        if task.concurrency > 1:
-            raise RuntimeError(f"The first task in a pipeline ({task.func.__qualname__}) cannot have concurrency greater than 1")
+        if task.workers > 1:
+            raise RuntimeError(f"The first task in a pipeline ({task.func.__qualname__}) cannot have more than 1 worker")
         if task.join:
             raise RuntimeError(f"The first task in a pipeline ({task.func.__qualname__}) cannot join previous results")
         self.q_out = mp.Queue(maxsize=task.throttle) \
@@ -31,8 +31,8 @@ class Producer:
         
         self._q_err = q_err
         self._shutdown_event = shutdown_event
-        self._n_workers = task.concurrency
-        self._n_consumers = 1 if next_task is None else next_task.concurrency
+        self._n_workers = task.workers
+        self._n_consumers = 1 if next_task is None else next_task.workers
         self._enqueue = EnqueueFactory(self.q_out, task)
 
     def _worker(self, *args, **kwargs):
@@ -65,8 +65,8 @@ class ProducerConsumer:
         
         self._q_err = q_err
         self._shutdown_event = shutdown_event
-        self._n_workers = task.concurrency
-        self._n_consumers = 1 if next_task is None else next_task.concurrency
+        self._n_workers = task.workers
+        self._n_consumers = 1 if next_task is None else next_task.workers
         self._dequeue = DequeueFactory(q_in, task)
         self._enqueue = EnqueueFactory(self.q_out, task)
 
