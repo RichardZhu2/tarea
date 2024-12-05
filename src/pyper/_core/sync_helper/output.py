@@ -21,10 +21,10 @@ class PipelineOutput:
         for task, next_task in zip(self.pipeline.tasks, self.pipeline.tasks[1:] + [None]):
             pool = pp if task.multiprocess else tp
             if q_out is None:
-                stage = Producer(task=task, next_task=next_task, q_err=pool.error_queue)
+                stage = Producer(task=task, next_task=next_task, q_err=pool.error_queue, shutdown_event=pool.shutdown_event)
                 stage.start(pool, *args, **kwargs)
             else:
-                stage = ProducerConsumer(q_in=q_out, task=task, next_task=next_task, q_err=pool.error_queue)
+                stage = ProducerConsumer(q_in=q_out, task=task, next_task=next_task, q_err=pool.error_queue, shutdown_event=pool.shutdown_event)
                 stage.start(pool)
             q_out = stage.q_out
 
@@ -45,3 +45,7 @@ class PipelineOutput:
                 except queue.Empty:
                     tp.raise_error_if_exists()
                     pp.raise_error_if_exists()
+                except (KeyboardInterrupt, SystemExit):
+                    tp.shutdown_event.set()
+                    pp.shutdown_event.set()
+                    raise

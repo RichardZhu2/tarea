@@ -13,14 +13,13 @@ class WorkerPool:
     2. Provides a mechanism to capture and propagate errors to the main thread/process
     3. Ensures safe tear-down of all workers 
     """
-    worker_type: type = None
-
-    error_queue: Union[mp.Queue, queue.Queue]
-    _workers: List[Union[mp.Process, threading.Thread]]
+    worker_type = None
 
     def __init__(self):
         self.error_queue = mp.Queue(1) if self.worker_type is mp.Process else queue.Queue(1)
-        self._workers = []
+        self.shutdown_event = mp.Event() if self.worker_type is mp.Process else threading.Event()
+
+        self._workers: List[Union[mp.Process, threading.Thread]] = []
 
     def __enter__(self):
         return self

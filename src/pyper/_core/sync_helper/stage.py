@@ -9,12 +9,18 @@ from .queue_io import DequeueFactory, EnqueueFactory
 from ..util.sentinel import StopSentinel
 
 if TYPE_CHECKING:
+    from multiprocessing.synchronize import Event as MpEvent
     from ..util.worker_pool import WorkerPool
     from ..task import Task
 
 
 class Producer:
-    def __init__(self, task: Task, next_task: Task, q_err: Union[mp.Queue, queue.Queue]):
+    def __init__(
+            self,
+            task: Task,
+            next_task: Task,
+            q_err: Union[mp.Queue, queue.Queue],
+            shutdown_event: Union[MpEvent, threading.Event]):
         if task.concurrency > 1:
             raise RuntimeError(f"The first task in a pipeline ({task.func.__qualname__}) cannot have concurrency greater than 1")
         if task.join:
@@ -24,16 +30,16 @@ class Producer:
             else queue.Queue(maxsize=task.throttle)
         
         self._q_err = q_err
+        self._shutdown_event = shutdown_event
         self._n_workers = task.concurrency
         self._n_consumers = 1 if next_task is None else next_task.concurrency
         self._enqueue = EnqueueFactory(self.q_out, task)
 
-        self._multiprocess = task.multiprocess
-    
     def _worker(self, *args, **kwargs):
         try:
             self._enqueue(*args, **kwargs)
         except Exception as e:
+            self._shutdown_event.set()
             self._q_err.put(e)
         finally:
             for _ in range(self._n_consumers):
@@ -44,12 +50,21 @@ class Producer:
 
 
 class ProducerConsumer:
-    def __init__(self, q_in: Union[mp.Queue, queue.Queue], task: Task, next_task: Task, q_err: Union[mp.Queue, queue.Queue]):
+    def __init__(
+            self,
+            q_in: Union[mp.Queue, queue.Queue],
+            task: Task,
+            next_task: Task,
+            q_err: Union[mp.Queue, queue.Queue],
+            shutdown_event: Union[MpEvent, threading.Event]):
+        # The output queue is shared between this task and the next. We optimize here by using queue.Queue wherever possible
+        # and only using multiprocess.Queue when the current task or the next task are multiprocessed
         self.q_out = mp.Queue(maxsize=task.throttle) \
             if task.multiprocess or (next_task is not None and next_task.multiprocess) \
             else queue.Queue(maxsize=task.throttle)
         
         self._q_err = q_err
+        self._shutdown_event = shutdown_event
         self._n_workers = task.concurrency
         self._n_consumers = 1 if next_task is None else next_task.concurrency
         self._dequeue = DequeueFactory(q_in, task)
@@ -80,8 +95,10 @@ class ProducerConsumer:
     def _worker(self):
         try:
             for output in self._dequeue():
-                self._enqueue(output)
+                if not self._shutdown_event.is_set():
+                    self._enqueue(output)
         except Exception as e:
+            self._shutdown_event.set()
             self._q_err.put(e)
         finally:
             self._finish()
