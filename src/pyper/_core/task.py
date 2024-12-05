@@ -15,7 +15,6 @@ class Task:
         "join",
         "concurrency",
         "throttle",
-        "daemon",
         "multiprocess"
     )
 
@@ -25,7 +24,6 @@ class Task:
             join: bool = False,
             concurrency: int = 1,
             throttle: int = 0,
-            daemon: bool = False,
             multiprocess: bool = False,
             bind: Optional[Tuple[Tuple, Dict]] = None):
         if not isinstance(concurrency, int):
@@ -38,8 +36,6 @@ class Task:
             raise ValueError("throttle cannot be less than 0")
         if not callable(func):
             raise TypeError("A task must be a callable object")
-        if daemon and multiprocess:
-            raise ValueError("daemon and multiprocess cannot both be True")
         
         self.is_gen = inspect.isgeneratorfunction(func) \
             or inspect.isasyncgenfunction(func) \
@@ -50,8 +46,6 @@ class Task:
             or inspect.iscoroutinefunction(func.__call__) \
             or inspect.isasyncgenfunction(func.__call__)
         
-        if self.is_async and daemon:
-            raise ValueError("daemon cannot be True for an async task")
         if self.is_async and multiprocess:
             raise ValueError("multiprocess cannot be True for an async task")
         
@@ -59,5 +53,4 @@ class Task:
         self.join = join
         self.concurrency = concurrency
         self.throttle = throttle
-        self.daemon = daemon
         self.multiprocess = multiprocess

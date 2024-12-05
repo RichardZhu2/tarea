@@ -1,12 +1,10 @@
 from __future__ import annotations
 
 import asyncio
-from concurrent.futures import ProcessPoolExecutor
 import sys
 from typing import TYPE_CHECKING
 
-from .queue_io import AsyncDequeue, AsyncEnqueue
-from ..util.asynchronize import ascynchronize
+from .queue_io import AsyncDequeueFactory, AsyncEnqueueFactory
 from ..util.sentinel import StopSentinel
 
 if sys.version_info < (3, 11):  # pragma: no cover
@@ -15,67 +13,50 @@ else:
     from asyncio import TaskGroup
 
 if TYPE_CHECKING:
-    from ..util.thread_pool import ThreadPool
     from ..task import Task
 
 
 class AsyncProducer:
-    def __init__(
-            self,
-            task: Task,
-            tg: TaskGroup,
-            tp: ThreadPool,
-            pp: ProcessPoolExecutor,
-            n_consumers: int):
-        self.task = ascynchronize(task, tp, pp)
+    def __init__(self, task: Task, next_task: Task):
         if task.concurrency > 1:
             raise RuntimeError(f"The first task in a pipeline ({task.func.__qualname__}) cannot have concurrency greater than 1")
         if task.join:
             raise RuntimeError(f"The first task in a pipeline ({task.func.__qualname__}) cannot join previous results")
-        self.tg = tg
-        self.n_consumers = n_consumers
+        self.task = task
         self.q_out = asyncio.Queue(maxsize=task.throttle)
         
-        self._enqueue = AsyncEnqueue(self.q_out, self.task)
+        self._n_consumers = 1 if next_task is None else next_task.concurrency
+        self._enqueue = AsyncEnqueueFactory(self.q_out, self.task)
     
     async def _worker(self, *args, **kwargs):
         await self._enqueue(*args, **kwargs)
 
-        for _ in range(self.n_consumers):
+        for _ in range(self._n_consumers):
             await self.q_out.put(StopSentinel)
 
-    def start(self, *args, **kwargs):
-        self.tg.create_task(self._worker(*args, **kwargs))
+    def start(self, tg: TaskGroup, /, *args, **kwargs):
+        tg.create_task(self._worker(*args, **kwargs))
 
 
 class AsyncProducerConsumer:
-    def __init__(
-            self,
-            q_in: asyncio.Queue,
-            task: Task,
-            tg: TaskGroup,
-            tp: ThreadPool,
-            pp: ProcessPoolExecutor,
-            n_consumers: int):
-        self.q_in = q_in
-        self.task = ascynchronize(task, tp, pp)
-        self.tg = tg
-        self.n_consumers = n_consumers
+    def __init__(self, q_in: asyncio.Queue, task: Task, next_task: Task):
         self.q_out = asyncio.Queue(maxsize=task.throttle)
 
+        self._n_workers = task.concurrency
+        self._n_consumers = 1 if next_task is None else next_task.concurrency
+        self._dequeue = AsyncDequeueFactory(q_in, task)
+        self._enqueue = AsyncEnqueueFactory(self.q_out, task)
         self._workers_done = 0
-        self._dequeue = AsyncDequeue(self.q_in, self.task)
-        self._enqueue = AsyncEnqueue(self.q_out, self.task)
     
     async def _worker(self):
         async for output in self._dequeue():
             await self._enqueue(output)
 
         self._workers_done += 1
-        if self._workers_done == self.task.concurrency:
-            for _ in range(self.n_consumers):
+        if self._workers_done == self._n_workers:
+            for _ in range(self._n_consumers):
                 await self.q_out.put(StopSentinel)
 
-    def start(self):
-        for _ in range(self.task.concurrency):
-            self.tg.create_task(self._worker())
+    def start(self, tg: TaskGroup, /):
+        for _ in range(self._n_workers):
+            tg.create_task(self._worker())
