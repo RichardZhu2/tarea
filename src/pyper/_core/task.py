@@ -9,18 +9,20 @@ class Task:
     """The representation of a function within a Pipeline."""
 
     __slots__ = (
-        "is_gen",
-        "is_async",
         "func",
+        "branch",
         "join",
         "workers",
         "throttle",
-        "multiprocess"
+        "multiprocess",
+        "is_async",
+        "is_gen"
     )
 
     def __init__(
             self,
             func: Callable,
+            branch: bool = False,
             join: bool = False,
             workers: int = 1,
             throttle: int = 0,
@@ -35,7 +37,7 @@ class Task:
         if throttle < 0:
             raise ValueError("throttle cannot be less than 0")
         if not callable(func):
-            raise TypeError("A task must be a callable object")
+            raise TypeError("A task function must be a callable object")
         
         self.is_gen = inspect.isgeneratorfunction(func) \
             or inspect.isasyncgenfunction(func) \
@@ -50,6 +52,7 @@ class Task:
             raise ValueError("multiprocess cannot be True for an async task")
         
         self.func = func if bind is None else functools.partial(func, *bind[0], **bind[1])
+        self.branch = branch
         self.join = join
         self.workers = workers
         self.throttle = throttle

@@ -17,7 +17,7 @@ def ascynchronize(task: Task, tp: ThreadPoolExecutor, pp: ProcessPoolExecutor) -
     if task.is_async:
         return task
     
-    if task.is_gen:
+    if task.is_gen and task.branch:
         @functools.wraps(task.func)
         async def wrapper(*args, **kwargs):
             for output in task.func(*args, **kwargs):
@@ -31,6 +31,7 @@ def ascynchronize(task: Task, tp: ThreadPoolExecutor, pp: ProcessPoolExecutor) -
             return await loop.run_in_executor(executor=executor, func=f)
     return Task(
         func=wrapper,
+        branch=task.branch,
         join=task.join,
         workers=task.workers,
         throttle=task.throttle

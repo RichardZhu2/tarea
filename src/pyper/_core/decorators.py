@@ -19,10 +19,11 @@ _ArgsKwargs: t.TypeAlias = t.Optional[t.Tuple[t.Tuple[t.Any], t.Dict[str, t.Any]
 
 
 class task:
-    """Decorator class to initialize a `Pipeline` consisting of one task, from a function or callable.
+    """Decorator class to initialize a `Pipeline` consisting of one task.
 
     Args:
-        func (callable): A positional-only param defining the task function
+        func (callable): A positional-only param defining the task function (can be omitted when using `@task`)
+        branch (bool): Allows the task to submit multiple outputs
         join (bool): Allows the task to take all previous results as input, instead of single results
         workers (int): Defines the number of workers to run the task
         throttle (int): Limits the number of results the task is able to produce when all consumers are busy
@@ -32,7 +33,7 @@ class task:
     Returns:
         Pipeline: A `Pipeline` instance consisting of one task.
 
-     Example:
+    Example:
     ```python
     def f(x: int):
         return x + 1
@@ -46,6 +47,7 @@ class task:
             func: None = None,
             /,
             *,
+            branch: bool = False,
             join: bool = False,
             workers: int = 1,
             throttle: int = 0,
@@ -55,21 +57,10 @@ class task:
     @t.overload
     def __new__(
             cls,
-            func: t.Callable[_P, t.Awaitable[_R]],
+            func: t.Callable[_P, t.Union[t.Awaitable[t.Iterable[_R]], t.AsyncGenerator[_R]]],
             /,
             *,
-            join: bool = False,
-            workers: int = 1,
-            throttle: int = 0,
-            multiprocess: bool = False,
-            bind: _ArgsKwargs = None) -> AsyncPipeline[_P, _R]: ...
-    
-    @t.overload
-    def __new__(
-            cls,
-            func: t.Callable[_P, t.AsyncGenerator[_R]],
-            /,
-            *,
+            branch: True,
             join: bool = False,
             workers: int = 1,
             throttle: int = 0,
@@ -79,9 +70,23 @@ class task:
     @t.overload
     def __new__(
             cls,
-            func: t.Callable[_P, t.Generator[_R]],
+            func: t.Callable[_P, t.Awaitable[_R]],
             /,
             *,
+            branch: bool = False,
+            join: bool = False,
+            workers: int = 1,
+            throttle: int = 0,
+            multiprocess: bool = False,
+            bind: _ArgsKwargs = None) -> AsyncPipeline[_P, _R]: ...
+        
+    @t.overload
+    def __new__(
+            cls,
+            func: t.Callable[_P, t.Iterable[_R]],
+            /,
+            *,
+            branch: True,
             join: bool = False,
             workers: int = 1,
             throttle: int = 0,
@@ -94,6 +99,7 @@ class task:
             func: t.Callable[_P, _R],
             /,
             *,
+            branch: bool = False,
             join: bool = False,
             workers: int = 1,
             throttle: int = 0,
@@ -105,6 +111,7 @@ class task:
             func: t.Optional[t.Callable] = None,
             /,
             *,
+            branch: bool = False,
             join: bool = False,
             workers: int = 1,
             throttle: int = 0,
@@ -112,8 +119,8 @@ class task:
             bind: _ArgsKwargs = None):
         # Classic decorator trick: @task() means func is None, @task without parentheses means func is passed. 
         if func is None:
-            return functools.partial(cls, join=join, workers=workers, throttle=throttle, multiprocess=multiprocess, bind=bind)
-        return Pipeline([Task(func=func, join=join, workers=workers, throttle=throttle, multiprocess=multiprocess, bind=bind)])
+            return functools.partial(cls, branch=branch, join=join, workers=workers, throttle=throttle, multiprocess=multiprocess, bind=bind)
+        return Pipeline([Task(func=func, branch=branch, join=join, workers=workers, throttle=throttle, multiprocess=multiprocess, bind=bind)])
     
     @staticmethod
     def bind(*args, **kwargs) -> _ArgsKwargs:
@@ -131,4 +138,3 @@ class task:
         if not args and not kwargs:
             return None
         return args, kwargs
-    

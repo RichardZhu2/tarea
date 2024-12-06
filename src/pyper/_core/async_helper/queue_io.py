@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import AsyncIterable, Iterable
 from typing import TYPE_CHECKING
 
 from ..util.sentinel import StopSentinel
@@ -39,7 +40,7 @@ class _JoiningAsyncDequeue(_AsyncDequeue):
 
 
 def AsyncEnqueueFactory(q_out: asyncio.Queue, task: Task):
-    return _BranchingAsyncEnqueue(q_out=q_out, task=task) if task.is_gen \
+    return _BranchingAsyncEnqueue(q_out=q_out, task=task) if task.branch \
         else _SingleAsyncEnqueue(q_out=q_out, task=task)
 
 
@@ -60,5 +61,13 @@ class _SingleAsyncEnqueue(_AsyncEnqueue):
 
 class _BranchingAsyncEnqueue(_AsyncEnqueue):
     async def __call__(self, *args, **kwargs):
-        async for output in self.task.func(*args, **kwargs):
-            await self.q_out.put(output)
+        result = self.task.func(*args, **kwargs)
+        if isinstance(result, AsyncIterable):
+            async for output in result:
+                await self.q_out.put(output)
+        elif isinstance(data := await result, Iterable):
+            for output in data:
+                await self.q_out.put(output)
+        else:
+            raise TypeError(f"got object of type {type(data)} from branching task {self.task.func} which could not be iterated over"
+                            " (the task should be a generator, or return an iterable)")

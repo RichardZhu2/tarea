@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import TYPE_CHECKING, Union
 
 from ..util.sentinel import StopSentinel
@@ -40,7 +41,7 @@ class _JoiningDequeue(_Dequeue):
 
 
 def EnqueueFactory(q_out: Union[mp.Queue, queue.Queue], task: Task):
-    return _BranchingEnqueue(q_out=q_out, task=task) if task.is_gen \
+    return _BranchingEnqueue(q_out=q_out, task=task) if task.branch \
         else _SingleEnqueue(q_out=q_out, task=task)
 
 
@@ -61,5 +62,11 @@ class _SingleEnqueue(_Enqueue):
 
 class _BranchingEnqueue(_Enqueue):
      def __call__(self, *args, **kwargs):
-        for output in self.task.func(*args, **kwargs):
-            self.q_out.put(output)
+        result = self.task.func(*args, **kwargs)
+        if isinstance(result, Iterable):
+            for output in result:
+                self.q_out.put(output)
+        else:
+            raise TypeError(
+                f"got object of type {type(result)} from branching task {self.task.func} which could not be iterated over."
+                " (the task should be a generator, or return an iterable)")
