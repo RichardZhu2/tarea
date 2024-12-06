@@ -45,7 +45,7 @@ class PipelineOutput:
                 except queue.Empty:
                     tp.raise_error_if_exists()
                     pp.raise_error_if_exists()
-                except (KeyboardInterrupt, SystemExit):
+                except (KeyboardInterrupt, SystemExit): # pragma: no cover
                     tp.shutdown_event.set()
                     pp.shutdown_event.set()
                     raise

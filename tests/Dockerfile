@@ -13,4 +13,4 @@ COPY .git .git
 
 RUN chmod +x tests/entrypoint.sh
 
-ENTRYPOINT ["tests/entrypoint.sh"]
+ENTRYPOINT ["/bin/bash", "tests/entrypoint.sh"]

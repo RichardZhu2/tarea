@@ -1,6 +1,7 @@
 import time
 from pyper import task
 
+class TestError(Exception): ...
 
 def f1(data):
     return data
@@ -18,7 +19,7 @@ def f4(a1, a2, a3, data, k1, k2):
 def f5(data):
     # Make queue monitor timeout on main thread
     time.sleep(0.2)
-    raise RuntimeError
+    raise TestError
 
 def consumer(data):
     total = 0
@@ -26,12 +27,12 @@ def consumer(data):
         total += i
     return total
 
-def test_pipeline():
-    p = task(f1) | task(f2)
+def test_branched_pipeline():
+    p = task(f1) | task(f2, branch=True)
     assert p(1).__next__() == 1
 
 def test_joined_pipeline():
-    p = task(f1) | task(f2) | task(f3, join=True)
+    p = task(f1) | task(f2, branch=True) | task(f3, branch=True, join=True)
     assert p(1).__next__() == 1
 
 def test_bind():
@@ -39,16 +40,16 @@ def test_bind():
     assert p(1).__next__() == 1
 
 def test_redundant_bind_ok():
-    p = task(f1) | task(f2, bind=task.bind())
+    p = task(f1) | task(f2, branch=True, bind=task.bind())
     assert p(1).__next__() == 1
 
 def test_consumer():
-    p = task(f1) | task(f2) > consumer
+    p = task(f1) | task(f2, branch=True) > consumer
     assert p(1) == 1
 
-def test_invalid_first_stage_concurrency():
+def test_invalid_first_stage_workers():
     try:
-        p = task(f1, concurrency=2) | task(f2) > consumer
+        p = task(f1, workers=2) | task(f2) > consumer
         p(1)
     except Exception as e:
         assert isinstance(e, RuntimeError)
@@ -57,29 +58,45 @@ def test_invalid_first_stage_concurrency():
     
 def test_invalid_first_stage_join():
     try:
-        p = task(f1, join=True) | task(f2) > consumer
+        p = task(f1, join=True) | task(f2, branch=True) > consumer
         p(1)
     except Exception as e:
         assert isinstance(e, RuntimeError)
     else:
         raise AssertionError
 
-def test_error_handling():
+def test_invalid_branch_result():
     try:
-        p = task(f1) | task(f2) | task(f5) > consumer
+        p = task(f1, branch=True) > consumer
         p(1)
     except Exception as e:
-        print(e)
+        assert isinstance(e, TypeError)
+    else:
+        raise AssertionError
+    
+def test_invalid_branch():
+    try:
+        p = task(f1, join=True) | task(f2, branch=True) > consumer
+        p(1)
+    except Exception as e:
         assert isinstance(e, RuntimeError)
     else:
         raise AssertionError
 
-def test_error_handling_in_daemon():
+def test_threaded_error_handling():
     try:
-        p = task(f5, daemon=True) | task(f2) > consumer
+        p = task(f1) | task(f5, workers=2) > consumer
         p(1)
     except Exception as e:
-        print(e)
-        assert isinstance(e, RuntimeError)
+        assert isinstance(e, TestError)
+    else:
+        raise AssertionError
+
+def test_multiprocessed_error_handling():
+    try:
+        p = task(f1) | task(f5, workers=2, multiprocess=True) > consumer
+        p(1)
+    except Exception as e:
+        assert isinstance(e, TestError)
     else:
         raise AssertionError

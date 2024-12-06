@@ -62,8 +62,7 @@ class _SingleEnqueue(_Enqueue):
 
 class _BranchingEnqueue(_Enqueue):
      def __call__(self, *args, **kwargs):
-        result = self.task.func(*args, **kwargs)
-        if isinstance(result, Iterable):
+        if isinstance(result := self.task.func(*args, **kwargs), Iterable):
             for output in result:
                 self.q_out.put(output)
         else:

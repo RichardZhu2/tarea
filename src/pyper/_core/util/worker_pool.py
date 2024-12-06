@@ -16,7 +16,7 @@ class WorkerPool:
     worker_type = None
 
     def __init__(self):
-        self.error_queue = mp.Queue(1) if self.worker_type is mp.Process else queue.Queue(1)
+        self.error_queue = mp.Queue() if self.worker_type is mp.Process else queue.Queue()
         self.shutdown_event = mp.Event() if self.worker_type is mp.Process else threading.Event()
 
         self._workers: List[Union[mp.Process, threading.Thread]] = []
@@ -34,9 +34,6 @@ class WorkerPool:
     
     def get_error(self) -> Exception:
         return self.error_queue.get()
-
-    def put_error(self, e: Exception):
-        self.error_queue.put(e)
 
     def raise_error_if_exists(self):
         if self.has_error:

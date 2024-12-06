@@ -2,14 +2,15 @@ from __future__ import annotations
 
 import multiprocessing as mp
 import queue
-import threading
 from typing import TYPE_CHECKING, Union
 
 from .queue_io import DequeueFactory, EnqueueFactory
 from ..util.sentinel import StopSentinel
+from ..util.value import ThreadingValue
 
 if TYPE_CHECKING:
-    from multiprocessing.synchronize import Event as MpEvent
+    from multiprocessing.synchronize import Event as ProcessEvent
+    from threading import Event as ThreadEvent
     from ..util.worker_pool import WorkerPool
     from ..task import Task
 
@@ -20,7 +21,7 @@ class Producer:
             task: Task,
             next_task: Task,
             q_err: Union[mp.Queue, queue.Queue],
-            shutdown_event: Union[MpEvent, threading.Event]):
+            shutdown_event: Union[ProcessEvent, ThreadEvent]):
         if task.workers > 1:
             raise RuntimeError(f"The first task in a pipeline ({task.func.__qualname__}) cannot have more than 1 worker")
         if task.join:
@@ -56,7 +57,7 @@ class ProducerConsumer:
             task: Task,
             next_task: Task,
             q_err: Union[mp.Queue, queue.Queue],
-            shutdown_event: Union[MpEvent, threading.Event]):
+            shutdown_event: Union[ProcessEvent, ThreadEvent]):
         # The output queue is shared between this task and the next. We optimize here by using queue.Queue wherever possible
         # and only using multiprocess.Queue when the current task or the next task are multiprocessed
         self.q_out = mp.Queue(maxsize=task.throttle) \
@@ -69,23 +70,12 @@ class ProducerConsumer:
         self._n_consumers = 1 if next_task is None else next_task.workers
         self._dequeue = DequeueFactory(q_in, task)
         self._enqueue = EnqueueFactory(self.q_out, task)
-
-        self._multiprocess = task.multiprocess
-        if self._multiprocess:
-            self._workers_done = mp.Value('i', 0)
-            self._lock = self._workers_done.get_lock()
-        else:
-            self._workers_done = 0
-            self._lock = threading.Lock()
+        self._workers_done = mp.Value('i', 0) if task.multiprocess else ThreadingValue(0)
 
     def _increment_workers_done(self):
-        with self._lock:
-            if self._multiprocess:
-                self._workers_done.value += 1
-                return self._workers_done.value
-            else:
-                self._workers_done += 1
-                return self._workers_done
+        with self._workers_done.get_lock():
+            self._workers_done.value += 1
+            return self._workers_done.value
 
     def _finish(self):
         if self._increment_workers_done() == self._n_workers:
