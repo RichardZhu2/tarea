@@ -22,7 +22,7 @@
 
 ---
 
-Pyper is a generalized framework for concurrent data-processing, based on functional programming patterns. Used for 🌐 **Data Collection**, 🔀 **ETL systems**, and general-purpose 🛠️ **Python Scripting**
+Pyper is a comprehensive framework for concurrent and parallel data-processing, based on functional programming patterns. Used for 🌐 **Data Collection**, 🔀 **ETL Systems**, and general-purpose 🛠️ **Python Scripting**
 
 See the [Documentation](https://pyper-dev.github.io/pyper/)
 
@@ -30,7 +30,7 @@ Key features:
 
 * 💡**Intuitive API**: Easy to learn, easy to think about. Implements clean abstractions to seamlessly unify threaded and asynchronous work.
 * 🚀 **Functional Paradigm**: Python functions are the building blocks of data pipelines. Let's you write clean, reusable code naturally.
-* 🛡️ **Safety**: Hides the heavy lifting of underlying task creation and execution. No more worrying about race conditions, memory leaks, and thread-level error handling.
+* 🛡️ **Safety**: Hides the heavy lifting of underlying task execution and resource clean-up. No more worrying about race conditions, memory leaks, or thread-level error handling.
 * ⚡ **Efficiency**: Designed from the ground up for lazy execution, using queues, workers, and generators.
 * ✨ **Pure Python**: Lightweight, with zero sub-dependencies.
 
@@ -284,9 +284,11 @@ To explore more of Pyper's features, see some further [examples](https://pyper-d
 
 ## Dependencies
 
-Pyper is implemented in pure Python, with no sub-dependencies. It relies heavily on the well-established built-in modules:
-* [asyncio](https://docs.python.org/3/library/asyncio.html) for handling async-based concurrency
-* [threading](https://docs.python.org/3/library/threading.html) for handling thread-based concurrency
+Pyper is implemented in pure Python, with no sub-dependencies. It is built on top of the well-established built-in Python modules:
+* [threading](https://docs.python.org/3/library/threading.html) for thread-based concurrency
+* [multiprocessing](https://docs.python.org/3/library/multiprocessing.html) for parallelism
+* [asyncio](https://docs.python.org/3/library/asyncio.html) for async-based concurrency
+* [concurrent.futures](https://docs.python.org/3/library/concurrent.futures.html) for unifying threads, processes, and async code
 
 ## License
 
