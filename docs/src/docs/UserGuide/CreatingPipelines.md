@@ -2,19 +2,19 @@
 title: Creating Pipelines
 parent: User Guide
 layout: default
-nav_order: 1
+nav_order: 2
 permalink: /docs/UserGuide/CreatingPipelines
 ---
 
 # Creating Pipelines
 {: .no_toc }
 
-1. TOC
+* TOC
 {:toc}
 
 ## The `task` Decorator
 
-A `Pipeline` represents a flow of data. In Pyper, functions are the building blocks used to create pipelines; the simplest way to do so is with the `task` decorator:
+Pyper's `task` decorator is the means by which we instantiate pipelines and control their behaviour:
 
 ```python
 from pyper import task, Pipeline
@@ -26,9 +26,9 @@ def func(x: int):
 assert isinstance(func, Pipeline)
 ```
 
-This creates a `Pipeline` object consisting of one 'task' (one step of data transformation). Later, pipelines can be [combined](CombiningPipelines) to form composite pipelines that handle a series of tasks.
+This creates a `Pipeline` object consisting of one 'task' (one step of data transformation). 
 
-The `task` decorator can also be used more dynamically, which is slightly preferable in general as this separates execution logic from the functional definitions themselves:
+The `task` decorator can also be used more dynamically, which is preferable in most cases as this separates execution logic from the functional definitions themselves:
 
 ```python
 from pyper import task
@@ -53,9 +53,12 @@ pipeline2 = task(lambda x: x - 1)
 pipeline3 = task(range)
 ```
 
+{: .info}
+The internal behaviour of a pipeline (e.g number of workers) is controlled by the different parameters for `task`. Refer to the [API Reference](../ApiReference/task)
+
 ## Pipeline Usage
 
-In keeping with functional design, a `Pipeline` is itself essentially a function, returning a [Generator](https://wiki.python.org/moin/Generators) object (Python's mechanism for lazily iterating through data).
+Recall that a `Pipeline` is itself essentially a function. Pipelines return a [Generator](https://wiki.python.org/moin/Generators) object (Python's mechanism for lazily iterating through data).
 
 ```python
 from pyper import task
@@ -63,17 +66,18 @@ from pyper import task
 def func(x: int):
     return x + 1
 
-pipeline = task(func)
-for output in pipeline(x=0):
-    print(output)
-# Prints:
-# 1
+if __name__ == "__main__":
+    pipeline = task(func)
+    for output in pipeline(x=0):
+        print(output)
+        # Prints:
+        # 1
 ```
 
 {: .info}
 A Pipeline always takes the input of its first task, and yields each output from its last task
 
-A pipeline that generates _multiple_ outputs can be created through functions that use `yield`:
+A pipeline that generates _multiple_ outputs can be created using the `branch` parameter:
 
 ```python
 from pyper import task
@@ -83,13 +87,14 @@ def func(x: int):
     yield x + 2
     yield x + 3
 
-pipeline = task(func)
-for output in pipeline(x=0):
-    print(output)
-# Prints:
-# 1
-# 2
-# 3
+if __name__ == "__main__":
+    pipeline = task(func, branch=True)
+    for output in pipeline(x=0):
+        print(output)
+        # Prints:
+        # 1
+        # 2
+        # 3
 ```
 
 ## Asynchronous Code
@@ -107,8 +112,11 @@ async def main():
     pipeline = task(func)
     async for output in pipeline(x=0):
         print(output)
+        # Prints:
+        # 1
 
-asyncio.run(main())
-# Prints:
-# 1
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
+
+Note that `AsyncPipeline` objects return an `AsyncGenerator` which is iterated over with `async for` syntax.
