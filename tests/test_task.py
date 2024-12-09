@@ -34,25 +34,25 @@ def test_as_decorator():
     assert isinstance(p, Pipeline)
 
 def test_as_decorator_with_params():
-    p = task(join=True, concurrency=2, throttle=2)(func)
+    p = task(branch=True, workers=2, throttle=2)(func)
     assert isinstance(p, Pipeline)
 
 def test_as_wrapper_with_params():
-    p = task(func, join=True, concurrency=2, throttle=2)
+    p = task(func, join=True, workers=2, throttle=2)
     assert isinstance(p, Pipeline)
 
-def _try_invalid_concurrency(value, exc_type):
+def _try_invalid_workers_value(value, exc_type):
     try:
-        task(func, concurrency=value)
+        task(func, workers=value)
     except Exception as e:
         return isinstance(e, exc_type)
     return False
 
-def test_raise_for_invalid_concurrency():
-    assert _try_invalid_concurrency(0, ValueError)
-    assert _try_invalid_concurrency(-1, ValueError)
-    assert _try_invalid_concurrency("1",TypeError)
-    assert _try_invalid_concurrency(1.5, TypeError)
+def test_raise_for_invalid_workers():
+    assert _try_invalid_workers_value(0, ValueError)
+    assert _try_invalid_workers_value(-1, ValueError)
+    assert _try_invalid_workers_value("1",TypeError)
+    assert _try_invalid_workers_value(1.5, TypeError)
 
 def _try_invalid_throttle(value, exc_type):
     try:
@@ -66,19 +66,19 @@ def test_raise_for_invalid_throttle():
     assert _try_invalid_throttle("1",TypeError)
     assert _try_invalid_throttle(1.5, TypeError)
 
-def test_raise_for_invalid_daemon():
-    try:
-        task(afunc, daemon=True)
-    except Exception as e:
-        assert isinstance(e, ValueError)
-    else:
-        raise AssertionError
-
 def test_raise_for_invalid_func():
     try:
         task(1)
     except Exception as e:
         assert isinstance(e, TypeError)
+    else:
+        raise AssertionError
+
+def test_raise_for_invalid_multiprocess():
+    try:
+        task(afunc, multiprocess=True)
+    except Exception as e:
+        assert isinstance(e, ValueError)
     else:
         raise AssertionError
 
