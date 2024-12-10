@@ -22,11 +22,11 @@
 
 ---
 
-Pyper is a comprehensive framework for concurrent and parallel data-processing, based on functional programming patterns. Used for 🌐 **Data Collection**, 🔀 **ETL Systems**, and general-purpose 🛠️ **Python Scripting**
+Pyper is a flexible framework for concurrent and parallel data-processing, based on functional programming patterns. Used for 🔀 **ETL Systems**, ⚙️ **Data Microservices**, and 🌐 **Data Collection**
 
 See the [Documentation](https://pyper-dev.github.io/pyper/)
 
-Key features:
+**Key features:**
 
 * 💡**Intuitive API**: Easy to learn, easy to think about. Implements clean abstractions to seamlessly unify threaded, multiprocessed, and asynchronous work.
 * 🚀 **Functional Paradigm**: Python functions are the building blocks of data pipelines. Let's you write clean, reusable code naturally.
@@ -99,7 +99,7 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-Pyper provides an elegant abstraction of the execution of each function via `pyper.task`, allowing you to focus on building out the **logical** functions of your program. In the `main` function:
+Pyper provides an elegant abstraction of the execution of each task, allowing you to focus on building out the **logical** functions of your program. In the `main` function:
 
 * `pipeline` defines a function; this takes the parameters of its first task (`get_data`) and yields each output from its last task (`step3`)
 * Tasks are piped together using the `|` operator (motivated by Unix's pipe operator) as a syntactic representation of passing inputs/outputs between tasks.
@@ -114,7 +114,7 @@ In the pipeline, we are executing three different types of work:
 
 `task` acts as one intuitive API for unifying the execution of each different type of function.
 
-Each task submits their outputs to the next task within the pipeline via queue-based data structures, which is the mechanism underpinning how concurrency and parallelism are achieved. See the [docs](https://pyper-dev.github.io/pyper/docs/UserGuide/BasicConcepts) for a breakdown of what a pipeline looks like under the hood.
+Each task has workers that submit outputs to the next task within the pipeline via queue-based data structures; this is the mechanism underpinning how concurrency and parallelism are achieved. See the [docs](https://pyper-dev.github.io/pyper/docs/UserGuide/BasicConcepts) for a breakdown of what a pipeline looks like under the hood.
 
 ---
 

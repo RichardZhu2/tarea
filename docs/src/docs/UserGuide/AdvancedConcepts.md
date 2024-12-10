@@ -75,14 +75,14 @@ The correct way to optimize the performance of CPU-bound tasks is through parall
 # Okay
 @task(workers=10, multiprocess=True)
 def long_computation(data: int):
-    for i in range(10_000_000):
+    for i in range(1, 1_000_000):
         data *= i
     return data
 
 # Bad -- cannot benefit from concurrency
 @task(workers=10)
 def long_computation(data: int):
-    for i in range(10_000_000):
+    for i in range(1, 1_000_000):
         data *= i
     return data
 ```
@@ -150,7 +150,7 @@ The correct pattern is generally to define functions which take these resources 
 from aiohttp import ClientSession
 from pyper import task
 
-async def list_user_ids(session: ClientSession) -> list:
+async def list_user_ids(session: ClientSession) -> list[int]:
     async with session.get("/users") as r:
         return await r.json()
 
@@ -163,7 +163,7 @@ When defining a pipeline, these additional arguments are plugged into tasks usin
 
 ```python
 async def main():
-    async with ClientSession("http://localhost:8000") as session:
+    async with ClientSession("http://localhost:8000/api") as session:
         user_data_pipeline = (
             task(list_user_ids, branch=True, bind=task.bind(session=session))
             | task(fetch_user_data, workers=10, bind=task.bind(session=session))
@@ -183,7 +183,7 @@ from pyper import task, AsyncPipeline
 
 def user_data_pipeline(session: ClientSession) -> AsyncPipeline:
 
-    async def list_user_ids() -> list:
+    async def list_user_ids() -> list[int]:
         async with session.get("/users") as r:
             return await r.json()
 
@@ -197,11 +197,11 @@ def user_data_pipeline(session: ClientSession) -> AsyncPipeline:
     )
 ```
 
-Now `user_data_pipeline` constructs a self-contained sata-flow, which can be reused without having to define its internal pipeline everytime.
+Now `user_data_pipeline` constructs a self-contained data-flow, which can be reused without having to define its internal pipeline everytime.
 
 ```python
 async def main():
-    async with ClientSession("http://localhost:8000") as session:
+    async with ClientSession("http://localhost:8000/api") as session:
         run = (
             user_data_pipeline(session)
             | task(write_to_file, join=True)

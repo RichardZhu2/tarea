@@ -41,10 +41,13 @@ The Python package space has great support for achieving
 
 However, the solutions for _general-purpose_ data processing are less established.
 
-Pyper aims to offer a comprehensive framework for concurrent and parallel data-processing in Python, designed with the following goals in mind:
+{: .text-green-200}
+**Pyper aims to offer a flexible framework for concurrent and parallel data-processing in Python**
+
+It is designed with the following goals in mind:
 
 * **Unified API**: Combine threads, processes and async code using one intuitive pattern
-* **Functional Paradigm**: Data pipelines compose together flexibly as functions
+* **Functional Paradigm**: Data pipelines compose together straightforwardly as functions
 * **Lazy Execution**: Built from the ground up to support generators, and provides mechanisms for fine-grained memory control
 * **Error Handling**: Data flows fail fast, even in long-running threads, and propagate their errors cleanly
 * **Complex Data Flows**: Data pipelines support branching/joining data flows, as well as sharing contexts/resources between tasks
@@ -61,6 +64,6 @@ $ pip install python-pyper
 
 ## Where Next?
 
-* Check out the 📖 **[User Guide](./docs/UserGuide/)** to get started with Pyper
+* Check out the 📖 **[User Guide](./docs/UserGuide/BasicConcepts)** to get started with Pyper
 
 * See some 🎯 **[Examples](./docs/Examples/)** of possible use cases

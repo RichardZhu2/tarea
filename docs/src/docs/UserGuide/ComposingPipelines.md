@@ -89,7 +89,13 @@ if __name__ == "__main__":
 ```
 
 {: .info}
-Pyper comes with fantastic IDE intellisense support which understands these operators, and will always show you which variables are `Pipeline` or `AsyncPipeline` objects; this also preserves type hints from your own functions, showing you the parameter and return type specs for each pipeline or consumer
+Pyper comes with fantastic intellisense support which understands these operators and preserves parameter/return type hints from user-defined functions
+
+<img src="../../assets/img/hint1.png" alt="Type Hint" style="width: 500; height: auto;">
+
+<img src="../../assets/img/hint2.png" alt="Type Hint" style="width: 500; height: auto;">
+
+<img src="../../assets/img/hint3.png" alt="Type Hint" style="width: 500; height: auto;">
 
 ## Nested Pipelines
 
