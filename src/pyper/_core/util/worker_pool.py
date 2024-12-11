@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import concurrent.futures as cf
 import multiprocessing as mp
-import queue
+import multiprocessing.synchronize as mpsync
 import threading
 from typing import List, Union
 
@@ -13,41 +14,40 @@ class WorkerPool:
     2. Provides a mechanism to capture and propagate errors to the main thread/process
     3. Ensures safe tear-down of all workers 
     """
-    worker_type = None
-
-    def __init__(self):
-        self.error_queue = mp.Queue() if self.worker_type is mp.Process else queue.Queue()
-        self.shutdown_event = mp.Event() if self.worker_type is mp.Process else threading.Event()
-
-        self._workers: List[Union[mp.Process, threading.Thread]] = []
+    shutdown_event: Union[mpsync.Event, threading.Event]
+    _executor: Union[cf.ProcessPoolExecutor, cf.ThreadPoolExecutor]
+    _futures: List[cf.Future]
 
     def __enter__(self):
+        self._executor.__enter__()
         return self
     
     def __exit__(self, et, ev, tb):
-        for worker in self._workers:
-            worker.join()
+        self._executor.__exit__(et, ev, tb)
+        for future in self._futures:
+            future.result()
 
-    @property
-    def has_error(self):
-        return not self.error_queue.empty()
-    
-    def get_error(self) -> Exception:
-        return self.error_queue.get()
-
-    def raise_error_if_exists(self):
-        if self.has_error:
-            raise self.get_error() from None
+    def create_queue(self):
+        raise NotImplementedError
 
     def submit(self, func, /, *args, **kwargs):
-        w = self.worker_type(target=func, args=args, kwargs=kwargs)
-        w.start()
-        self._workers.append(w)
+        future = self._executor.submit(func, *args, **kwargs)
+        self._futures.append(future)
+        return future
 
 
 class ThreadPool(WorkerPool):
-    worker_type = threading.Thread
+    def __init__(self):
+        self.shutdown_event = threading.Event()
+
+        self._executor = cf.ThreadPoolExecutor()
+        self._futures = []
 
 
 class ProcessPool(WorkerPool):
-    worker_type = mp.Process
+    def __init__(self):
+        self.manager = mp.Manager()
+        self.shutdown_event = self.manager.Event()
+
+        self._executor = cf.ProcessPoolExecutor()
+        self._futures = []
