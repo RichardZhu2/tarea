@@ -233,6 +233,11 @@ An asynchronous task cannot set `multiprocessing` as `True`
 
 See some [considerations](../UserGuide/AdvancedConcepts#cpu-bound-work) for when to set this parameter.
 
+Note, also, that normal Python multiprocessing restrictions apply:
+
+* Only [picklable](https://docs.python.org/3/library/pickle.html#module-pickle) functions can be multiprocessed, which excludes certain types of functions like lambdas and closures.
+* Arguments and return values of multiprocessed tasks must also be picklable, which excludes objects like file handles, connections, and (on Windows) generators.
+
 {: .text-beta}
 ### `bind`
 

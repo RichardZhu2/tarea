@@ -36,6 +36,7 @@ dependencies = [
 ]
 
 [project.urls]
+Homepage = "https://pyper-dev.github.io/pyper/"
 Documentation = "https://pyper-dev.github.io/pyper/"
 Repository = "https://github.com/pyper-dev/pyper"
 Issues = "https://github.com/pyper-dev/pyper/issues"

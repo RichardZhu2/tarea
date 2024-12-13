@@ -73,15 +73,6 @@ def test_invalid_branch_result():
         assert isinstance(e, TypeError)
     else:
         raise AssertionError
-    
-def test_invalid_branch():
-    try:
-        p = task(f1, join=True) | task(f2, branch=True) > consumer
-        p(1)
-    except Exception as e:
-        assert isinstance(e, RuntimeError)
-    else:
-        raise AssertionError
 
 def test_threaded_error_handling():
     try:

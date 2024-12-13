@@ -78,7 +78,7 @@ if __name__ == "__main__":
     writer(pipeline(limit=10))  # Run
 ```
 
-The `>` operator (again inspired by UNIX syntax) is used to pipe a `Pipeline` into a consumer function (any callable that takes a data stream) returning simply a function that handles the 'run' operation. This is syntactic sugar for the `Pipeline.consume` method.
+The `>` operator (again inspired by UNIX syntax) is used to pipe a `Pipeline` into a consumer function (any callable that takes an `Iterable` of inputs) returning simply a function that handles the 'run' operation. This is syntactic sugar for the `Pipeline.consume` method.
 ```python
 if __name__ == "__main__":
     run = step1 | step2 > JsonFileWriter("data.json")
@@ -105,26 +105,26 @@ For example, let's say we have a theoretical pipeline which takes `(source: str)
 
 ```python
 download_files_from_source = (
-    task(list_files, branch=True)
-    | task(download_file, workers=20)
-    | task(decrypt_file, workers=5, multiprocess=True)
+    task(list_files, branch=True)  # Return a list of file info
+    | task(download_file, workers=20)  # Return a filepath
+    | task(decrypt_file, workers=5, multiprocess=True)  # Return a filepath
 )
 ```
 
 This is a function which generates multiple outputs per source. But we may wish to process _batches of filepaths_ downstream, after waiting for a single source to finish downloading. This means a piping approach, where we pass each _individual_ filepath along to subsequent tasks, won't work.
 
-Instead, we can define a function to create a list of filepaths as `download_files_from_source > list`. This is now a composable function which can be used in an outer pipeline.
+Instead, we can define `download_files_from_source` as a task within an outer pipeline, which is as simple as wrapping it in `task` like we would with any other function.
 
 ```python
 download_and_merge_files = (
-    task(get_sources, branch=True)
-    | task(download_files_from_source > list)
-    | task(merge_files, workers=5, multiprocess=True)
+    task(get_sources, branch=True)  # Return a list of sources
+    | task(download_files_from_source)  # Return a batch of filepaths (as a generator)
+    | task(sync_files, workers=5)  # Do something with each batch
 )
 ```
 
-* `download_files_from source > list` takes a source as input, downloads all files, and creates a list of filepaths as output.
-* `merge_files` takes a list of filepaths as input.
+* `download_files_from_source` takes a source as input, and returns a generator of filepaths (note that we are _not_ setting `branch=True`; a batch of filepaths is being passed along per source)
+* `sync_files` takes each batch of filepaths as input, and works on them concurrently
 
 ## Asynchronous Code
 
