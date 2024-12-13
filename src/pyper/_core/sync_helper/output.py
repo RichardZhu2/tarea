@@ -34,11 +34,5 @@ class PipelineOutput:
         """Iterate through the pipeline, taking the inputs to the first task, and yielding each output from the last task."""
         with ThreadPool() as tp, ProcessPool() as pp:
             q_out = self._get_q_out(tp, pp, *args, **kwargs)
-            while True:
-                try:
-                    # Use the timeout strategy for unblocking main thread without busy waiting
-                    if (data := q_out.get()) is StopSentinel:
-                        break
-                    yield data
-                except (KeyboardInterrupt, SystemExit): # pragma: no cover
-                    raise
+            while (data := q_out.get()) is not StopSentinel:
+                yield data

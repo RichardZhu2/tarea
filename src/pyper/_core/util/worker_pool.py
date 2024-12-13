@@ -27,9 +27,6 @@ class WorkerPool:
         for future in self._futures:
             future.result()
 
-    def create_queue(self):
-        raise NotImplementedError
-
     def submit(self, func, /, *args, **kwargs):
         future = self._executor.submit(func, *args, **kwargs)
         self._futures.append(future)

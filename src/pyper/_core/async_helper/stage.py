@@ -19,9 +19,9 @@ if TYPE_CHECKING:
 class AsyncProducer:
     def __init__(self, task: Task, next_task: Task):
         if task.workers > 1:
-            raise RuntimeError(f"The first task in a pipeline ({task.func.__qualname__}) cannot have more than 1 worker")
+            raise RuntimeError(f"The first task in a pipeline ({task.func}) cannot have more than 1 worker")
         if task.join:
-            raise RuntimeError(f"The first task in a pipeline ({task.func.__qualname__}) cannot join previous results")
+            raise RuntimeError(f"The first task in a pipeline ({task.func}) cannot join previous results")
         self.task = task
         self.q_out = asyncio.Queue(maxsize=task.throttle)
         

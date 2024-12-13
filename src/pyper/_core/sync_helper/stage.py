@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import queue
 import threading
+from types import SimpleNamespace
 from typing import TYPE_CHECKING, Union
 
 from .queue_io import DequeueFactory, EnqueueFactory
 from ..util.sentinel import StopSentinel
-from ..util.counter import MultiprocessingCounter, ThreadingCounter
 
 if TYPE_CHECKING:
     from multiprocessing.managers import SyncManager
@@ -24,9 +24,9 @@ class Producer:
             manager: SyncManager,
             shutdown_event: Union[mpsync.Event, threading.Event]):
         if task.workers > 1:
-            raise RuntimeError(f"The first task in a pipeline ({task.func.__qualname__}) cannot have more than 1 worker")
+            raise RuntimeError(f"The first task in a pipeline ({task.func}) cannot have more than 1 worker")
         if task.join:
-            raise RuntimeError(f"The first task in a pipeline ({task.func.__qualname__}) cannot join previous results")
+            raise RuntimeError(f"The first task in a pipeline ({task.func}) cannot join previous results")
         self.q_out = manager.Queue(maxsize=task.throttle) \
             if task.multiprocess or (next_task is not None and next_task.multiprocess) \
             else queue.Queue(maxsize=task.throttle)
@@ -69,7 +69,8 @@ class ProducerConsumer:
         self._n_consumers = 1 if next_task is None else next_task.workers
         self._dequeue = DequeueFactory(q_in, task)
         self._enqueue = EnqueueFactory(self.q_out, task)
-        self._workers_done = MultiprocessingCounter(0, manager) if task.multiprocess else ThreadingCounter(0)
+        self._workers_done = manager.Value('i', 0) if task.multiprocess else SimpleNamespace(value=0)
+        self._workers_done_lock = manager.Lock() if task.multiprocess else threading.Lock()
 
     def _worker(self):
         try:
@@ -80,11 +81,12 @@ class ProducerConsumer:
             self._shutdown_event.set()
             raise
         finally:
-            if self._workers_done.increment() == self._n_workers:
-                for _ in range(self._n_consumers):
-                    self.q_out.put(StopSentinel)
+            with self._workers_done_lock:
+                self._workers_done.value += 1
+                if self._workers_done.value == self._n_workers:
+                    for _ in range(self._n_consumers):
+                        self.q_out.put(StopSentinel)
 
-            
     def start(self, pool: WorkerPool, /):
         for _ in range(self._n_workers):
             pool.submit(self._worker)

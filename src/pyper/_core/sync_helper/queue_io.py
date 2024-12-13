@@ -30,13 +30,13 @@ class _Dequeue:
 
 
 class _SingleDequeue(_Dequeue):
-     def __call__(self):
-         for data in self._input_stream():
+    def __call__(self):
+        for data in self._input_stream():
             yield data
 
 
 class _JoiningDequeue(_Dequeue):
-     def __call__(self):
+    def __call__(self):
         yield self._input_stream()
 
 
@@ -56,12 +56,12 @@ class _Enqueue:
 
 
 class _SingleEnqueue(_Enqueue):        
-     def __call__(self, *args, **kwargs):
+    def __call__(self, *args, **kwargs):
         self.q_out.put(self.task.func(*args, **kwargs))
 
 
 class _BranchingEnqueue(_Enqueue):
-     def __call__(self, *args, **kwargs):
+    def __call__(self, *args, **kwargs):
         if isinstance(result := self.task.func(*args, **kwargs), Iterable):
             for output in result:
                 self.q_out.put(output)
