@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-import queue
+from typing import TYPE_CHECKING, Union
 
 from .stage import Producer, ProducerConsumer
 from ..util.sentinel import StopSentinel
 from ..util.worker_pool import ProcessPool, ThreadPool
 
 if TYPE_CHECKING:
+    import multiprocessing as mp
+    import queue
     from ..pipeline import Pipeline
 
 
@@ -15,7 +16,7 @@ class PipelineOutput:
     def __init__(self, pipeline: Pipeline):
         self.pipeline = pipeline
 
-    def _get_q_out(self, tp: ThreadPool, pp: ProcessPool, *args, **kwargs) -> queue.Queue:
+    def _get_q_out(self, tp: ThreadPool, pp: ProcessPool, *args, **kwargs) -> Union[mp.Queue, queue.Queue]:
         """Feed forward each stage to the next, returning the output queue of the final stage."""
         q_out = None
         for task, next_task in zip(self.pipeline.tasks, self.pipeline.tasks[1:] + [None]):
@@ -34,5 +35,10 @@ class PipelineOutput:
         """Iterate through the pipeline, taking the inputs to the first task, and yielding each output from the last task."""
         with ThreadPool() as tp, ProcessPool() as pp:
             q_out = self._get_q_out(tp, pp, *args, **kwargs)
-            while (data := q_out.get()) is not StopSentinel:
-                yield data
+            try:
+                while (data := q_out.get()) is not StopSentinel:
+                    yield data
+            except (KeyboardInterrupt, SystemExit):  # pragma: no cover
+                tp.shutdown_event.set()
+                pp.shutdown_event.set()
+                raise

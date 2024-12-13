@@ -9,8 +9,8 @@ from .queue_io import DequeueFactory, EnqueueFactory
 from ..util.sentinel import StopSentinel
 
 if TYPE_CHECKING:
+    import multiprocessing as mp
     from multiprocessing.managers import SyncManager
-    import multiprocessing.queues as mpq
     import multiprocessing.synchronize as mpsync
     from ..util.worker_pool import WorkerPool
     from ..task import Task
@@ -53,7 +53,7 @@ class Producer:
 class ProducerConsumer:
     def __init__(
             self,
-            q_in: Union[mpq.Queue, queue.Queue],
+            q_in: Union[mp.Queue, queue.Queue],
             task: Task,
             next_task: Task,
             manager: SyncManager,
