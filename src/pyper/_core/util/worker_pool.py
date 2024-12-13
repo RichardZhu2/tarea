@@ -8,11 +8,10 @@ from typing import List, Union
 
 
 class WorkerPool:
-    """A context for fine-grained thread/process management and error handling.
+    """A unified wrapper to the ThreadPoolExecutor and ProcessPoolExecutor classes.
 
     1. Spins up thread/process workers and maintains a reference to each
-    2. Provides a mechanism to capture and propagate errors to the main thread/process
-    3. Ensures safe tear-down of all workers 
+    2. Ensures safe tear-down of all workers and propagates errors 
     """
     shutdown_event: Union[mpsync.Event, threading.Event]
     _executor: Union[cf.ProcessPoolExecutor, cf.ThreadPoolExecutor]
@@ -25,6 +24,7 @@ class WorkerPool:
     def __exit__(self, et, ev, tb):
         self._executor.__exit__(et, ev, tb)
         for future in self._futures:
+            # Resolve the future and raise any errors inside
             future.result()
 
     def submit(self, func, /, *args, **kwargs):
