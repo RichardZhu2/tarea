@@ -52,7 +52,7 @@ It is designed with the following goals in mind:
 * **Error Handling**: Data flows fail fast, even in long-running threads, and propagate their errors cleanly
 * **Complex Data Flows**: Data pipelines support branching/joining data flows, as well as sharing contexts/resources between tasks
 
-In addition, Pyper provides an extensible way to write code that can be integrated with other frameworks like those aforementioned.
+In addition, Pyper enables developers to write code in an extensible way that can be integrated naturally with other frameworks like those aforementioned.
 
 ## Installation
 

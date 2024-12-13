@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import AsyncIterable, Iterable
 from typing import TYPE_CHECKING
 
 from ..util.sentinel import StopSentinel
@@ -61,10 +61,11 @@ class _SingleAsyncEnqueue(_AsyncEnqueue):
 
 class _BranchingAsyncEnqueue(_AsyncEnqueue):
     async def __call__(self, *args, **kwargs):
-        if self.task.is_gen:
-            async for output in self.task.func(*args, **kwargs):
+        result = self.task.func(*args, **kwargs)
+        if isinstance(result, AsyncIterable):
+            async for output in result:
                 await self.q_out.put(output)
-        elif isinstance(result := await self.task.func(*args, **kwargs), Iterable):
+        elif isinstance(result := await result, Iterable):
             for output in result:
                 await self.q_out.put(output)
         else:

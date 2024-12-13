@@ -18,10 +18,14 @@ def ascynchronize(task: Task, tp: ThreadPoolExecutor, pp: ProcessPoolExecutor) -
         return task
     
     if task.is_gen and task.branch:
+        # Small optimization to convert sync generators to async generators
+        # This saves from having to use a thread/process just to get the generator object
+        # We also add asyncio.sleep(0) to unblock long synchronous generators
         @functools.wraps(task.func)
         async def wrapper(*args, **kwargs):
             for output in task.func(*args, **kwargs):
                 yield output
+                await asyncio.sleep(0)
     else:
         executor = pp if task.multiprocess else tp
         @functools.wraps(task.func)
