@@ -40,8 +40,7 @@ This represents defining a new function that:
 if __name__ == "__main__":
     for output in new_pipeline(4):
         print(output)
-        # Prints:
-        # 9
+        #> 9
 ```
 
 ## Consumer Functions and the `>` Operator

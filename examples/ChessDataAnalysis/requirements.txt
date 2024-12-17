@@ -1,0 +1,4 @@
+chess>=1.0
+pandas>=2.0
+python-pyper
+requests>=2.0

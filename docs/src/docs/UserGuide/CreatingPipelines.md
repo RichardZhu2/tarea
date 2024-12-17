@@ -70,8 +70,7 @@ if __name__ == "__main__":
     pipeline = task(func)
     for output in pipeline(x=0):
         print(output)
-        # Prints:
-        # 1
+        #> 1
 ```
 
 {: .info}
@@ -91,10 +90,9 @@ if __name__ == "__main__":
     pipeline = task(func, branch=True)
     for output in pipeline(x=0):
         print(output)
-        # Prints:
-        # 1
-        # 2
-        # 3
+        #> 1
+        #> 2
+        #> 3
 ```
 
 ## Asynchronous Code
@@ -112,8 +110,7 @@ async def main():
     pipeline = task(func)
     async for output in pipeline(x=0):
         print(output)
-        # Prints:
-        # 1
+        #> 1
 
 if __name__ == "__main__":
     asyncio.run(main())

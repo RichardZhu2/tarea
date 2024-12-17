@@ -39,7 +39,7 @@ IO-bound tasks benefit from both concurrent and parallel execution.
 However, to avoid the overhead costs of creating processes, it is generally preferable to use either threading or async code.
 
 {: .info}
-Threads incur a higher overhead cost compared to async coroutines, but are suitable if the function / application prefers or requires a synchronous implementation
+Threads incur a higher overhead cost compared to async coroutines, but are suitable if the task prefers or requires a synchronous implementation
 
 Note that asynchronous functions need to `await` or `yield` something in order to benefit from concurrency.
 Any long-running call in an async task which does not yield execution will prevent other tasks from making progress:
@@ -115,30 +115,32 @@ In Pyper, it is especially important to separate out different types of work int
 
 ```python
 # Bad -- functions not separated
-@task(workers=20)
+@task(branch=True, workers=20)
 def get_data(endpoint: str):
     # IO-bound work
     r = requests.get(endpoint)
     data = r.json()
     
     # CPU-bound work
-    return process_data(data)
+    for item in data["results"]:
+        yield process_data(item)
 ```
 
 Whilst it makes sense to handle the network request concurrently, the call to `process_data` within the same task is blocking and will harm concurrency.
-Instead, `process_data` can be implemented as a separate task:
+Instead, `process_data` should be implemented as a separate function:
 
 ```python
-@task(workers=20)
+@task(branch=True, workers=20)
 def get_data(endpoint: str):
     # IO-bound work
     r = requests.get(endpoint)
-    return r.json()
+    data = r.json()
+    return data["results"]
     
 @task(workers=10, multiprocess=True)
 def process_data(data):
     # CPU-bound work
-    ...
+    return ...
 ```
 
 ### Resource Management
@@ -254,16 +256,14 @@ if __name__ == "__main__":
     branched_pipeline = task(get_data, branch=True)
     for output in branched_pipeline():
         print(output)
-        # Prints:
-        # 1
-        # 2
-        # 3
+        #> 1
+        #> 2
+        #> 3
 
     non_branched_pipeline = task(get_data)
     for output in non_branched_pipeline():
         print(output)
-        # Prints:
-        # <generator object get_data at ...>
+        #> <generator object get_data at ...>
 ```
 
 ### Limitations
@@ -281,11 +281,13 @@ Generator functions, which return _immediately_, do most of their work outside o
 
 The alternatives are to:
 
-1. Use a synchronous generator anyway (if its performance is unlikely to be a bottleneck)
+1. Refactor your functions. If you find that one function is repeating a computation multiple times, it may be possible to [separate out responsibilities](#logical-separation) into separate functions
 
-2. Use a normal synchronous function, and return an iterable data structure (if memory is unlikely to be a bottleneck)
+2. Use a synchronous generator anyway (if its performance is unlikely to be a bottleneck)
 
-3. Use an async generator (if an async implementation of the function is appropriate)
+3. Use a normal synchronous function, and return an iterable data structure (if memory is unlikely to be a bottleneck)
+
+4. Use an async generator (if an async implementation of the function is appropriate)
 
 {: .text-green-200}
 **Multiprocessing and Pickling**
