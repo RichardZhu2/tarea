@@ -7,6 +7,10 @@ assignees: RichardZhu2
 
 ---
 
+**Quick Check**
+- [ ] I've checked the [documentation](https://pyper-dev.github.io/pyper/) and verified that the behaviour is unintended
+- [ ] I've checked existing issues for similar bug reports
+
 **Description**
 Please describe what the bug is and when it occurs (mention package version and OS if relevant)
 
