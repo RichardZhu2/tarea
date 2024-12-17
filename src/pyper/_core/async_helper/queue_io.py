@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncIterable, Iterable
 from typing import TYPE_CHECKING
 
@@ -65,9 +66,11 @@ class _BranchingAsyncEnqueue(_AsyncEnqueue):
         if isinstance(result, AsyncIterable):
             async for output in result:
                 await self.q_out.put(output)
+                await asyncio.sleep(0)
         elif isinstance(result := await result, Iterable):
             for output in result:
                 await self.q_out.put(output)
+                await asyncio.sleep(0)
         else:
             raise TypeError(f"got object of type {type(result)} from branching task {self.task.func} which could not be iterated over"
                             " (the task should be a generator, or return an iterable)")

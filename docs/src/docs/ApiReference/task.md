@@ -47,7 +47,7 @@ Pipelines created this way can be [composed](../UserGuide/ComposingPipelines) in
 * **type:** `Optional[Callable]`
 * **default:** `None`
 
-The function or callable object defining the logic of the task. Does not need to be passed explicitly if using `@task` as a decorator.
+The function or callable object defining the logic of the task. This is a positional-only parameter.
 
 ```python
 from pyper import task
@@ -55,6 +55,12 @@ from pyper import task
 @task
 def add_one(x: int):
     return x + 1
+
+# OR
+def add_one(x: int):
+    return x + 1
+
+pipeline = task(add_one)
 ```
 
 {: .text-beta}
@@ -76,16 +82,14 @@ if __name__ == "__main__":
     pipeline1 = task(create_data)
     for output in pipeline1(0):
         print(output)
-        # Prints:
-        # [1, 2, 3]
+        #> [1, 2, 3]
 
     pipeline2 = task(create_data, branch=True)
     for output in pipeline2(0):
         print(output)
-        # Prints:
-        # 1
-        # 2
-        # 3
+        #> 1
+        #> 2
+        #> 3
 ```
 
 This can be applied to generator functions (or async generator functions) to submit outputs lazily:
@@ -102,10 +106,9 @@ if __name__ == "__main__":
     pipeline = task(create_data, branch=True)
     for output in pipeline(0):
         print(output)
-        # Prints:
-        # 1
-        # 2
-        # 3
+        #> 1
+        #> 2
+        #> 3
 ```
 
 {: .text-beta}
@@ -135,10 +138,9 @@ if __name__ == "__main__":
     pipeline = create_data | running_total
     for output in pipeline(0):
         print(output)
-        # Prints:
-        # 1
-        # 3
-        # 6
+        #> 1
+        #> 3
+        #> 6
 ```
 
 {: .warning}
@@ -259,10 +261,9 @@ if __name__ == "__main__":
     )
     for output in pipeline(1, 4):
         print(output)
-        # Prints:
-        # 10
-        # 20
-        # 30
+        #> 10
+        #> 20
+        #> 30
 ```
 
 Given that each producer-consumer expects to be given one input argument, the purpose of the `bind` parameter is to allow functions to be defined flexibly in terms of the inputs they wish to take, as well as allowing tasks to access external states, like contexts.
