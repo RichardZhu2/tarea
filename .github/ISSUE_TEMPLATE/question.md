@@ -2,7 +2,7 @@
 name: Question
 about: Need some help?
 title: "[QUESTION] <New Question>"
-labels: ''
+labels: question
 assignees: RichardZhu2
 
 ---
@@ -12,4 +12,4 @@ assignees: RichardZhu2
 - [ ] I've checked existing issues for similar questions
 
 **Question**
-Please ask away! 😊
+Please ask away!
