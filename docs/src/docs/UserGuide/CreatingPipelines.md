@@ -19,25 +19,15 @@ Pyper's `task` decorator is the means by which we instantiate pipelines and cont
 ```python
 from pyper import task, Pipeline
 
-@task
-def func(x: int):
-    return x + 1
-
-assert isinstance(func, Pipeline)
-```
-
-This creates a `Pipeline` object consisting of one 'task' (one step of data transformation). 
-
-The `task` decorator can also be used more dynamically, which is preferable in most cases as this separates execution logic from the functional definitions themselves:
-
-```python
-from pyper import task
-
 def func(x: int):
     return x + 1
 
 pipeline = task(func)
+
+assert isinstance(pipeline, Pipeline)
 ```
+
+This creates a `Pipeline` object consisting of one 'task' (one step of data transformation). 
 
 In addition to functions, anything `callable` in Python can be wrapped in `task` in the same way:
 

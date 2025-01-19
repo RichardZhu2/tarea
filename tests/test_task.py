@@ -74,11 +74,29 @@ def test_raise_for_invalid_func():
     else:
         raise AssertionError
 
-def test_raise_for_invalid_multiprocess():
+def test_raise_for_async_multiprocess():
     try:
         task(afunc, multiprocess=True)
     except Exception as e:
         assert isinstance(e, ValueError)
+    else:
+        raise AssertionError
+
+def test_raise_for_lambda_multiprocess():
+    try:
+        task(lambda x: x, multiprocess=True)
+    except Exception as e:
+        assert isinstance(e, RuntimeError)
+    else:
+        raise AssertionError
+    
+def test_raise_for_non_global_multiprocess():
+    try:
+        @task(multiprocess=True)
+        def f(x):
+            return x
+    except Exception as e:
+        assert isinstance(e, RuntimeError)
     else:
         raise AssertionError
 

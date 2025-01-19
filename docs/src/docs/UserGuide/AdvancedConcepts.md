@@ -72,19 +72,16 @@ Executing CPU-bound tasks concurrently does not improve performance, as CPU-boun
 The correct way to optimize the performance of CPU-bound tasks is through parallel execution, using multiprocessing.
 
 ```python
-# Okay
-@task(workers=10, multiprocess=True)
 def long_computation(data: int):
     for i in range(1, 1_000_000):
         data *= i
     return data
 
+# Okay
+pipeline = task(long_computation, workers=10, multiprocess=True)
+
 # Bad -- cannot benefit from concurrency
-@task(workers=10)
-def long_computation(data: int):
-    for i in range(1, 1_000_000):
-        data *= i
-    return data
+pipeline = task(long_computation, workers=10)
 ```
 
 Note, however, that processes incur a very high overhead cost (performance cost in creation and memory cost in inter-process communication). Specific cases should be benchmarked to fine-tune the task parameters for your program / your machine.
@@ -115,7 +112,6 @@ In Pyper, it is especially important to separate out different types of work int
 
 ```python
 # Bad -- functions not separated
-@task(branch=True, workers=20)
 def get_data(endpoint: str):
     # IO-bound work
     r = requests.get(endpoint)
@@ -124,23 +120,28 @@ def get_data(endpoint: str):
     # CPU-bound work
     for item in data["results"]:
         yield process_data(item)
+
+pipeline = task(get_data, branch=True, workers=20)
 ```
 
-Whilst it makes sense to handle the network request concurrently, the call to `process_data` within the same task is blocking and will harm concurrency.
+Whilst it makes sense to handle the network request concurrently, the call to `process_data` within the same task requires holding onto the GIL and will harm concurrency.
 Instead, `process_data` should be implemented as a separate function:
 
 ```python
-@task(branch=True, workers=20)
 def get_data(endpoint: str):
     # IO-bound work
     r = requests.get(endpoint)
     data = r.json()
     return data["results"]
     
-@task(workers=10, multiprocess=True)
 def process_data(data):
     # CPU-bound work
     return ...
+
+pipeline = (
+    task(get_data, branch=True, workers=20)
+    | task(workers=10, multiprocess=True)
+)
 ```
 
 ### Resource Management
@@ -225,14 +226,12 @@ import typing
 from pyper import task
 
 # Okay
-@task(branch=True)
 def generate_values_lazily() -> typing.Iterable[dict]:
     for i in range(10_000_000):
         yield {"data": i}
 
 # Bad -- this creates 10 million values in memory
-# Subsequent tasks also cannot start executing until the entire list is created
-@task(branch=True)
+# Within a pipeline, subsequent tasks also cannot start executing until the entire list is created
 def create_values_in_list() -> typing.List[dict]:
     return [{"data": i} for i in range(10_000_000)]
 ```

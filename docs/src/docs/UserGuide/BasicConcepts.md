@@ -19,23 +19,24 @@ Pyper follows the [functional paradigm](https://docs.python.org/3/howto/function
 * Python functions are the building blocks used to create `Pipeline` objects
 * `Pipeline` objects can themselves be thought of as functions
 
-For example, to create a simple pipeline, we can wrap a function in the `task` decorator:
+For example, to create a simple pipeline, we can wrap a function in the `task` class:
 
 ```python
 from pyper import task
 
-@task
 def len_strings(x: str, y: str) -> int:
     return len(x) + len(y)
+
+pipeline = task(len_strings)
 ```
 
-This defines `len_strings` as a pipeline consisting of a single task. It takes the parameters `(x: str, y: str)` and generates `int` outputs from an output queue:
+This defines `pipeline` as a pipeline consisting of a single task. It takes the parameters `(x: str, y: str)` and generates `int` outputs from an output queue:
 
 <img src="../../assets/img/diagram1.png" alt="Diagram" style="height: 250px; width: auto;">
 
 **Key Concepts**
 
-* A <b style="color:#3399FF;">pipeline</b> is a functional reprentation of data-flow _(Pyper API)_
+* A <b style="color:#3399FF;">Pipeline</b> is a representation of data-flow _(Pyper API)_
 * A **task** represents a single functional operation within a pipeline _(user defined)_
 * Under the hood, tasks pass data along via <b style="color:#FF8000;">workers</b> and <b style="color:#FF8000;">queues</b> _(Pyper internal)_
 
@@ -45,21 +46,22 @@ Pipelines are composable components; to create a pipeline which runs multiple ta
 import time
 from pyper import task
 
-@task
 def len_strings(x: str, y: str) -> int:
     return len(x) + len(y)
 
-@task(workers=3)
 def sleep(data: int) -> int:
     time.sleep(data)
     return data
 
-@task(workers=2)
 def calculate(data: int) -> bool:
     time.sleep(data)
     return data % 2 == 0
 
-pipeline = len_strings | sleep | calculate
+pipeline = (
+    task(len_strings) 
+    | task(sleep, workers=3)
+    | task(calculate, workers=2)
+)
 ```
 
 This defines `pipeline` as a series of tasks, taking the parameters `(x: str, y: str)` and generating `bool` outputs:

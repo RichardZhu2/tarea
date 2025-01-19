@@ -53,12 +53,10 @@ from typing import Dict, Iterable
 
 from pyper import task
 
-@task(branch=True)
 def step1(limit: int):
     for i in range(limit):
         yield {"data": i}
 
-@task
 def step2(data: Dict):
     return data | {"hello": "world"}
 
@@ -72,7 +70,7 @@ class JsonFileWriter:
             json.dump(data_list, f, indent=4)
 
 if __name__ == "__main__":
-    pipeline = step1 | step2  # The pipeline
+    pipeline = task(step1, branch=True) | task(step2)  # The pipeline
     writer = JsonFileWriter("data.json")  # A consumer
     writer(pipeline(limit=10))  # Run
 ```
@@ -80,10 +78,18 @@ if __name__ == "__main__":
 The `>` operator (again inspired by UNIX syntax) is used to pipe a `Pipeline` into a consumer function (any callable that takes an `Iterable` of inputs) returning simply a function that handles the 'run' operation. This is syntactic sugar for the `Pipeline.consume` method.
 ```python
 if __name__ == "__main__":
-    run = step1 | step2 > JsonFileWriter("data.json")
+    run = (
+        task(step1, branch=True)
+        | task(step2)
+        > JsonFileWriter("data.json")
+    )
     run(limit=10)
     # OR
-    run = step1.pipe(step2).consume(JsonFileWriter("data.json"))
+    run = (
+        task(step1, branch=True).pipe(
+        task(step2)).consume(
+        JsonFileWriter("data.json"))
+    )
     run(limit=10)
 ```
 
@@ -163,12 +169,10 @@ from typing import AsyncIterable, Dict
 
 from pyper import task
 
-@task(branch=True)
 async def step1(limit: int):
     for i in range(limit):
         yield {"data": i}
 
-@task
 def step2(data: Dict):
     return data | {"hello": "world"}
 
@@ -182,7 +186,11 @@ class AsyncJsonFileWriter:
             json.dump(data_list, f, indent=4)
 
 async def main():
-    run = step1 | step2 > AsyncJsonFileWriter("data.json")
+    run = (
+        task(step1, branch=True)
+        | task(step2)
+        > AsyncJsonFileWriter("data.json")
+    )
     await run(limit=10)
 
 if __name__ == "__main__":
