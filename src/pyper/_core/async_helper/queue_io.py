@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import AsyncIterable, Iterable
 from typing import TYPE_CHECKING
 
+from ..util.lazy_branch import AsyncLazyBranch, LazyBranch, StopBranch
 from ..util.sentinel import StopSentinel
 
 if TYPE_CHECKING:
@@ -23,6 +24,12 @@ class _AsyncDequeue:
 
     async def _input_stream(self):
         while (data := await self.q_in.get()) is not StopSentinel:
+            if isinstance(data, AsyncLazyBranch):
+                if (data := await data.anext_value()) is StopBranch:
+                    continue
+            elif isinstance(data, LazyBranch):
+                if (data := data.next_value()) is StopBranch:
+                    continue
             yield data
     
     def __call__(self):
@@ -64,12 +71,14 @@ class _BranchingAsyncEnqueue(_AsyncEnqueue):
     async def __call__(self, *args, **kwargs):
         result = self.task.func(*args, **kwargs)
         if isinstance(result, AsyncIterable):
-            async for output in result:
-                await self.q_out.put(output)
+            branch = AsyncLazyBranch(result)
+            while not branch.stopped:
+                await self.q_out.put(branch)
                 await asyncio.sleep(0)
         elif isinstance(result := await result, Iterable):
-            for output in result:
-                await self.q_out.put(output)
+            branch = LazyBranch(result)
+            while not branch.stopped:
+                await self.q_out.put(branch)
                 await asyncio.sleep(0)
         else:
             raise TypeError(f"got object of type {type(result)} from branching task {self.task.func} which could not be iterated over"

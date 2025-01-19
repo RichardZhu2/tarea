@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Union
 
+from ..util.lazy_branch import LazyBranch, StopBranch
 from ..util.sentinel import StopSentinel
 
 if TYPE_CHECKING:
@@ -23,6 +24,9 @@ class _Dequeue:
 
     def _input_stream(self):
         while (data := self.q_in.get()) is not StopSentinel:
+            if isinstance(data, LazyBranch):
+                if (data := data.next_value()) is StopBranch:
+                    continue
             yield data
     
     def __call__(self):
@@ -63,8 +67,9 @@ class _SingleEnqueue(_Enqueue):
 class _BranchingEnqueue(_Enqueue):
     def __call__(self, *args, **kwargs):
         if isinstance(result := self.task.func(*args, **kwargs), Iterable):
-            for output in result:
-                self.q_out.put(output)
+            branch = LazyBranch(result)
+            while not branch.stopped:
+                self.q_out.put(branch)
         else:
             raise TypeError(
                 f"got object of type {type(result)} from branching task {self.task.func} which could not be iterated over."
