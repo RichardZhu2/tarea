@@ -52,11 +52,6 @@ The function or callable object defining the logic of the task. This is a positi
 ```python
 from pyper import task
 
-@task
-def add_one(x: int):
-    return x + 1
-
-# OR
 def add_one(x: int):
     return x + 1
 
@@ -123,11 +118,9 @@ When `join` is `False`, a producer-consumer takes each individual output from th
 from typing import Iterable
 from pyper import task
 
-@task(branch=True)
 def create_data(x: int):
     return [x + 1, x + 2, x + 3]
 
-@task(branch=True, join=True)
 def running_total(data: Iterable[int]):
     total = 0
     for item in data:
@@ -135,7 +128,10 @@ def running_total(data: Iterable[int]):
         yield total
 
 if __name__ == "__main__":
-    pipeline = create_data | running_total
+    pipeline = (
+        task(create_data, branch=True)
+        | task(running_total, branch=True, join=True)
+    )
     for output in pipeline(0):
         print(output)
         #> 1
@@ -190,15 +186,18 @@ The parameter `throttle` determines the maximum size of a task's output queue. T
 import time
 from pyper import task
 
-@task(branch=True, throttle=5000)
 def fast_producer():
     for i in range(1_000_000):
         yield i
 
-@task
 def slow_consumer(data: int):
     time.sleep(10)
     return data
+
+pipeline = (
+    task(fast_consumer, branch=True, throttle=5000)
+    | task(slow_consumer)
+)
 ```
 
 In the example above, workers on `fast_producer` are paused after `5000` values have been generated, until workers for `slow_consumer` are ready to start processing again.
