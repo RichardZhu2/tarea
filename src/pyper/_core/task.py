@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import functools
 import inspect
+import pickle
 from typing import Callable, Dict, Optional, Tuple
 
 
@@ -53,13 +54,12 @@ class Task:
             if self.is_async:
                 raise ValueError("multiprocess cannot be True for an async task")
             
-            # The function needs to be globally accessible to be multiprocessed
-            # This excludes objects like lambdas and closures
-            # We capture these cases to throw a clear error message
-            module = inspect.getmodule(func)
-            if module is None or getattr(module, func.__name__, None) is not func:
-                raise RuntimeError(f"{func} cannot be multiprocessed because it is not globally accessible"
-                                   f" -- it must be a globally defined object accessible by the name {func.__name__}")
+            # The function must be picklable
+            try:
+                pickle.dumps(func)
+            except (pickle.PicklingError, AttributeError):
+                raise RuntimeError(f"{func} cannot be pickled and so cannot be multiprocessed"
+                    f" -- ensure that the function is globally accessible and that its definition has not changed") from None
             
         self.func = func if bind is None else functools.partial(func, *bind[0], **bind[1])
         self.branch = branch
