@@ -7,7 +7,7 @@ import functools
 from ..task import Task
 
 
-def ascynchronize(task: Task, tp: ThreadPoolExecutor, pp: ProcessPoolExecutor) -> Task:
+def asynchronize(task: Task, tp: ThreadPoolExecutor, pp: ProcessPoolExecutor) -> Task:
     """Unify async and sync tasks as awaitable futures.
     1. If the task is async already, return it.
     2. Multiprocessed synchronous functions are wrapped in a call to `run_in_executor` using `ProcessPoolExecutor`.
@@ -36,3 +36,7 @@ def ascynchronize(task: Task, tp: ThreadPoolExecutor, pp: ProcessPoolExecutor) -
         workers=task.workers,
         throttle=task.throttle
     )
+
+
+# backwards compatibility
+ascynchronize = asynchronize

@@ -6,7 +6,7 @@ import sys
 from typing import TYPE_CHECKING
 
 from .stage import AsyncProducer, AsyncProducerConsumer
-from ..util.asynchronize import ascynchronize
+from ..util.asynchronize import asynchronize
 from ..util.sentinel import StopSentinel
 
 if sys.version_info < (3, 11):  # pragma: no cover
@@ -26,7 +26,7 @@ class AsyncPipelineOutput:
         """Feed forward each stage to the next, returning the output queue of the final stage."""
         q_out = None
         for task, next_task in zip(self.pipeline.tasks, self.pipeline.tasks[1:] + [None]):
-            task = ascynchronize(task, tp=tp, pp=pp)
+            task = asynchronize(task, tp=tp, pp=pp)
             if q_out is None:
                 stage = AsyncProducer(task=task, next_task=next_task)
                 stage.start(tg, *args, **kwargs)
