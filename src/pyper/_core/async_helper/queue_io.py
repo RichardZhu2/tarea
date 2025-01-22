@@ -8,10 +8,10 @@ from ..util.sentinel import StopSentinel
 
 if TYPE_CHECKING:
     import asyncio
-    from ..task import Task
+    from ..task import PipelineTask
 
 
-def AsyncDequeueFactory(q_in: asyncio.Queue, task: Task):
+def AsyncDequeueFactory(q_in: asyncio.Queue, task: PipelineTask):
     return _JoiningAsyncDequeue(q_in=q_in) if task.join \
         else _SingleAsyncDequeue(q_in=q_in)
 
@@ -40,14 +40,14 @@ class _JoiningAsyncDequeue(_AsyncDequeue):
         yield self._input_stream()
 
 
-def AsyncEnqueueFactory(q_out: asyncio.Queue, task: Task):
+def AsyncEnqueueFactory(q_out: asyncio.Queue, task: PipelineTask):
     return _BranchingAsyncEnqueue(q_out=q_out, task=task) if task.branch \
         else _SingleAsyncEnqueue(q_out=q_out, task=task)
 
 
 class _AsyncEnqueue:
     """Puts output from a task onto an output queue."""
-    def __init__(self, q_out: asyncio.Queue, task: Task):
+    def __init__(self, q_out: asyncio.Queue, task: PipelineTask):
         self.q_out = q_out
         self.task = task
         

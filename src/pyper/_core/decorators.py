@@ -5,7 +5,7 @@ import sys
 import typing as t
 
 from .pipeline import AsyncPipeline, Pipeline
-from .task import Task
+from .task import PipelineTask, Task
 
 if sys.version_info < (3, 10):  # pragma: no cover
     from typing_extensions import ParamSpec
@@ -65,6 +65,7 @@ class task:
             workers: int = 1,
             throttle: int = 0,
             multiprocess: bool = False,
+            unpack: bool = False,
             bind: ArgsKwargs = None) -> Pipeline[_P, _Default]: ...
     
     @t.overload
@@ -78,6 +79,7 @@ class task:
             workers: int = 1,
             throttle: int = 0,
             multiprocess: bool = False,
+            unpack: bool = False,
             bind: ArgsKwargs = None) -> t.Type[_branched_partial_task]: ...
     
     @t.overload
@@ -91,6 +93,7 @@ class task:
             workers: int = 1,
             throttle: int = 0,
             multiprocess: bool = False,
+            unpack: bool = False,
             bind: ArgsKwargs = None) -> t.Type[task]: ...
     
     @t.overload
@@ -104,6 +107,7 @@ class task:
             workers: int = 1,
             throttle: int = 0,
             multiprocess: bool = False,
+            unpack: bool = False,
             bind: ArgsKwargs = None) -> AsyncPipeline[_P, _R]: ...
         
     @t.overload
@@ -117,6 +121,7 @@ class task:
             workers: int = 1,
             throttle: int = 0,
             multiprocess: bool = False,
+            unpack: bool = False,
             bind: ArgsKwargs = None) -> AsyncPipeline[_P, _R]: ...
         
     @t.overload
@@ -130,6 +135,7 @@ class task:
             workers: int = 1,
             throttle: int = 0,
             multiprocess: bool = False,
+            unpack: bool = False,
             bind: ArgsKwargs = None) -> Pipeline[_P, _R]: ...
     
     @t.overload
@@ -143,6 +149,7 @@ class task:
             workers: int = 1,
             throttle: int = 0,
             multiprocess: bool = False,
+            unpack: bool = False,
             bind: ArgsKwargs = None) -> Pipeline[_P, _R]: ...
 
     def __new__(
@@ -155,12 +162,13 @@ class task:
             workers: int = 1,
             throttle: int = 0,
             multiprocess: bool = False,
+            unpack: bool = False,
             bind: ArgsKwargs = None):
         # Classic decorator trick: @task() means func is None, @task without parentheses means func is passed. 
         if func is None:
-            return functools.partial(cls, branch=branch, join=join, workers=workers, throttle=throttle, multiprocess=multiprocess, bind=bind)
-        return Pipeline([Task(func=func, branch=branch, join=join, workers=workers, throttle=throttle, multiprocess=multiprocess, bind=bind)])
-    
+            return functools.partial(cls, branch=branch, join=join, workers=workers, throttle=throttle, multiprocess=multiprocess, unpack=unpack, bind=bind)
+        return Pipeline([PipelineTask(func, branch=branch, join=join, workers=workers, throttle=throttle, multiprocess=multiprocess, unpack=unpack, bind=bind)])
+
     @staticmethod
     def bind(*args, **kwargs) -> ArgsKwargs:
         """Bind additional `args` and `kwargs` to a task.
@@ -174,9 +182,8 @@ class task:
             p(x=1)
             ```
         """
-        if not args and not kwargs:
-            return None
-        return args, kwargs
+        if args or kwargs:
+            return args, kwargs
 
 
 class _branched_partial_task:

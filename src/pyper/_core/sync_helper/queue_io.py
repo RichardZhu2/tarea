@@ -8,10 +8,10 @@ from ..util.sentinel import StopSentinel
 if TYPE_CHECKING:
     import multiprocessing as mp
     import queue
-    from ..task import Task
+    from ..task import PipelineTask
 
 
-def DequeueFactory(q_in: Union[mp.Queue, queue.Queue], task: Task):
+def DequeueFactory(q_in: Union[mp.Queue, queue.Queue], task: PipelineTask):
     return _JoiningDequeue(q_in=q_in) if task.join \
         else _SingleDequeue(q_in=q_in)
 
@@ -40,14 +40,14 @@ class _JoiningDequeue(_Dequeue):
         yield self._input_stream()
 
 
-def EnqueueFactory(q_out: Union[mp.Queue, queue.Queue], task: Task):
+def EnqueueFactory(q_out: Union[mp.Queue, queue.Queue], task: PipelineTask):
     return _BranchingEnqueue(q_out=q_out, task=task) if task.branch \
         else _SingleEnqueue(q_out=q_out, task=task)
 
 
 class _Enqueue:
     """Puts output from a task onto an output queue."""
-    def __init__(self, q_out: Union[mp.Queue, queue.Queue], task: Task):
+    def __init__(self, q_out: Union[mp.Queue, queue.Queue], task: PipelineTask):
         self.q_out = q_out
         self.task = task
         

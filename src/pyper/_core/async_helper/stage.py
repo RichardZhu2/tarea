@@ -13,11 +13,11 @@ else:
     from asyncio import TaskGroup
 
 if TYPE_CHECKING:
-    from ..task import Task
+    from ..task import PipelineTask
 
 
 class AsyncProducer:
-    def __init__(self, task: Task, next_task: Task):
+    def __init__(self, task: PipelineTask, next_task: PipelineTask):
         if task.workers > 1:
             raise RuntimeError(f"The first task in a pipeline ({task.func}) cannot have more than 1 worker")
         if task.join:
@@ -39,7 +39,7 @@ class AsyncProducer:
 
 
 class AsyncProducerConsumer:
-    def __init__(self, q_in: asyncio.Queue, task: Task, next_task: Task):
+    def __init__(self, q_in: asyncio.Queue, task: PipelineTask, next_task: PipelineTask):
         self.q_out = asyncio.Queue(maxsize=task.throttle)
 
         self._n_workers = task.workers

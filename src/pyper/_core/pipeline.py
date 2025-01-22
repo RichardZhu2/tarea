@@ -13,7 +13,7 @@ else:
     from typing import ParamSpec
 
 if t.TYPE_CHECKING:
-    from .task import Task
+    from .task import PipelineTask
 
 
 _P = ParamSpec('P')
@@ -33,7 +33,7 @@ class Pipeline(t.Generic[_P, _R]):
     ```
     """
 
-    def __new__(cls, tasks: t.List[Task]):
+    def __new__(cls, tasks: t.List[PipelineTask]):
         if any(task.is_async for task in tasks):
             instance = object.__new__(AsyncPipeline)
         else:
@@ -41,7 +41,7 @@ class Pipeline(t.Generic[_P, _R]):
         instance.__init__(tasks=tasks)
         return instance
 
-    def __init__(self, tasks: t.List[Task]):
+    def __init__(self, tasks: t.List[PipelineTask]):
         self.tasks = tasks
 
     def __call__(self, *args: _P.args, **kwargs: _P.kwargs) -> t.Generator[_R]:

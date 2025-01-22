@@ -13,14 +13,14 @@ if TYPE_CHECKING:
     from multiprocessing.managers import SyncManager
     import multiprocessing.synchronize as mpsync
     from ..util.worker_pool import WorkerPool
-    from ..task import Task
+    from ..task import PipelineTask
 
 
 class Producer:
     def __init__(
             self,
-            task: Task,
-            next_task: Task,
+            task: PipelineTask,
+            next_task: PipelineTask,
             manager: SyncManager,
             shutdown_event: Union[mpsync.Event, threading.Event]):
         if task.workers > 1:
@@ -54,8 +54,8 @@ class ProducerConsumer:
     def __init__(
             self,
             q_in: Union[mp.Queue, queue.Queue],
-            task: Task,
-            next_task: Task,
+            task: PipelineTask,
+            next_task: PipelineTask,
             manager: SyncManager,
             shutdown_event: Union[mpsync.Event, threading.Event]):
         # The output queue is shared between this task and the next. We optimize here by using queue.Queue wherever possible
