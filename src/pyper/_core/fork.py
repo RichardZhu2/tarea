@@ -10,7 +10,7 @@ if sys.version_info < (3, 10):  # pragma: no cover
 else:
     from typing import ParamSpec
 if sys.version_info < (3, 11):  # pragma: no cover
-    from ..util.task_group import ExceptionGroup
+    from .util.task_group import ExceptionGroup
 
 if t.TYPE_CHECKING:
     from .task import Task
