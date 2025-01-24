@@ -28,6 +28,9 @@ async def af4(data):
     async for row in data:
         yield row
 
+async def af5(result1, result2):
+    return result1, result2
+
 async def consumer(data):
     total = 0
     async for i in data:
@@ -48,6 +51,16 @@ async def test_iterable_branched_pipeline():
 async def test_joined_pipeline():
     p = task(af1) | task(af2, branch=True) | task(af4, branch=True, join=True)
     assert await p(1).__anext__() == 1
+
+@pytest.mark.asyncio
+async def test_unpack_args():
+    p = task(f1) | task(af5, unpack=True)
+    assert await p((1, 2)).__anext__() == (1, 2)
+
+@pytest.mark.asyncio
+async def test_unpack_kwargs():
+    p = task(f1) | task(af5, unpack=True)
+    assert await p({"result1": 1, "result2": 2}).__anext__() == (1, 2)
 
 @pytest.mark.asyncio
 async def test_consumer():

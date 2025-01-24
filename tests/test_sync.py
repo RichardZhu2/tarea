@@ -1,4 +1,3 @@
-import time
 from pyper import task
 
 class TestError(Exception): ...
@@ -17,9 +16,10 @@ def f4(a1, a2, a3, data, k1, k2):
     return data
 
 def f5(data):
-    # Make queue monitor timeout on main thread
-    time.sleep(0.2)
     raise TestError
+
+def f6(result1, result2):
+    return result1, result2
 
 def consumer(data):
     total = 0
@@ -34,6 +34,14 @@ def test_branched_pipeline():
 def test_joined_pipeline():
     p = task(f1) | task(f2, branch=True) | task(f3, branch=True, join=True)
     assert p(1).__next__() == 1
+
+def test_unpack_args():
+    p = task(f1) | task(f6, unpack=True)
+    assert p((1, 2)).__next__() == (1, 2)
+
+def test_unpack_kwargs():
+    p = task(f1) | task(f6, unpack=True)
+    assert p({"result1": 1, "result2": 2}).__next__() == (1, 2)
 
 def test_bind():
     p = task(f1) | task(f4, bind=task.bind(1, 1, 1, k1=1, k2=2))
@@ -73,6 +81,15 @@ def test_invalid_branch_result():
         assert isinstance(e, TypeError)
     else:
         raise AssertionError
+
+def test_invalid_unpack():
+    try:
+        p = task(f1) | task(f6, unpack=True)
+        p(1).__next__()
+    except Exception as e:
+        assert isinstance(e, TypeError)
+    else:
+        raise AssertionError(e)
 
 def test_threaded_error_handling():
     try:
