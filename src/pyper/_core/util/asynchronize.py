@@ -3,8 +3,17 @@ from __future__ import annotations
 import asyncio
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 import functools
+from typing import overload
 
 from ..task import Task, PipelineTask
+
+
+@overload
+def asynchronize(task: PipelineTask, tp: ThreadPoolExecutor, pp: ProcessPoolExecutor) -> PipelineTask: ...
+
+
+@overload
+def asynchronize(task: Task, tp: ThreadPoolExecutor, pp: ProcessPoolExecutor) -> Task: ...
 
 
 def asynchronize(task: Task, tp: ThreadPoolExecutor, pp: ProcessPoolExecutor) -> Task:
@@ -29,12 +38,13 @@ def asynchronize(task: Task, tp: ThreadPoolExecutor, pp: ProcessPoolExecutor) ->
             loop = asyncio.get_running_loop()
             f = functools.partial(task.func, *args, **kwargs)
             return await loop.run_in_executor(executor=executor, func=f)
-        
-    # TODO: generalize this to work for Task
-    return PipelineTask(
-        wrapper,
-        branch=task.branch,
-        join=task.join,
-        workers=task.workers,
-        throttle=task.throttle
-    )
+    
+    if isinstance(task, PipelineTask):
+        return PipelineTask(
+            wrapper,
+            branch=task.branch,
+            join=task.join,
+            workers=task.workers,
+            throttle=task.throttle
+        )
+    return Task(wrapper)

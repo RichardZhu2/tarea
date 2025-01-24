@@ -4,6 +4,7 @@ import functools
 import sys
 import typing as t
 
+from .fork import AsyncFork, Fork
 from .pipeline import AsyncPipeline, Pipeline
 from .task import PipelineTask, Task
 
@@ -23,13 +24,14 @@ class task:
     """Decorator class to initialize a `Pipeline` consisting of one task.
 
     Args:
-        func (callable): A positional-only param defining the task function (can be omitted when using `@task`)
+        func (callable): A positional-only param defining the task function
         branch (bool): Allows the task to submit multiple outputs
         join (bool): Allows the task to take all previous results as input, instead of single results
         workers (int): Defines the number of workers to run the task
         throttle (int): Limits the number of results the task is able to produce when all consumers are busy
         multiprocess (bool): Allows the task to be multiprocessed (cannot be `True` for async tasks)
-        bind (tuple[tuple, dict]): Additional args and kwargs to bind to the task when defining a pipeline
+        unpack (bool): Allows unpacking of `tuple`/`list` input as *args or `dict` input as **kwargs
+        bind (tuple[tuple, dict]): Additional args and kwargs to bind to the task function
 
     Returns:
         A `Pipeline` instance consisting of one task.
@@ -169,9 +171,60 @@ class task:
             return functools.partial(cls, branch=branch, join=join, workers=workers, throttle=throttle, multiprocess=multiprocess, unpack=unpack, bind=bind)
         return Pipeline([PipelineTask(func, branch=branch, join=join, workers=workers, throttle=throttle, multiprocess=multiprocess, unpack=unpack, bind=bind)])
 
+    @t.overload
+    @staticmethod
+    def fork(
+            func: t.Callable[_P, t.Awaitable[_R]],
+            multiprocess: bool = False,
+            unpack: bool = False,
+            bind: ArgsKwargs = None) -> AsyncFork[_P, t.List]: ...
+    
+    @t.overload
+    @staticmethod
+    def fork(
+            func: t.Callable[_P],
+            multiprocess: bool = False,
+            unpack: bool = False,
+            bind: ArgsKwargs = None) -> Fork[_P, t.List]: ...
+
+    @staticmethod
+    def fork(
+            func: t.Callable,
+            /,
+            *,
+            multiprocess: bool = False,
+            unpack: bool = False,
+            bind: ArgsKwargs = None):
+        """Initializes a `Fork`, representing a set of distinct, independent tasks to be run concurrently.
+
+        Args:
+            func (callable): A positional-only param defining the task function
+            multiprocess (bool): Allows the task to be multiprocessed (cannot be `True` for async tasks)
+            unpack (bool): Allows unpacking of `tuple`/`list` input as *args or `dict` input as **kwargs
+            bind (tuple[tuple, dict]): Additional args and kwargs to bind to the task function
+
+        Returns:
+            A `Fork` instance consisting of one task.
+
+        Examples:
+            ```python
+            def spam(x: int):
+                return x + 1
+
+            def ham(x: int):
+                return x + 2
+            
+            fork = task.fork(spam) & task.fork(ham)
+            result1, result2 = fork(0)
+            assert result1 = 1
+            assert result2 = 2
+            ```
+        """
+        return Fork([Task(func, multiprocess=multiprocess, unpack=unpack, bind=bind)])
+    
     @staticmethod
     def bind(*args, **kwargs) -> ArgsKwargs:
-        """Bind additional `args` and `kwargs` to a task.
+        """Utility method to bind additional `args` and `kwargs` to a task via the `bind` parameter.
 
         Example:
             ```python
