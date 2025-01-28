@@ -195,7 +195,7 @@ def slow_consumer(data: int):
     return data
 
 pipeline = (
-    task(fast_consumer, branch=True, throttle=5000)
+    task(fast_producer, branch=True, throttle=5000)
     | task(slow_consumer)
 )
 ```
